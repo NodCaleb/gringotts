@@ -9,4 +9,9 @@ builder.AddProject<Projects.Gringotts_Web>("webfrontend")
     .WithReference(apiService)
     .WaitFor(apiService);
 
+builder.AddProject<Projects.Gringotts_Bot>("bot")
+    .WithExternalHttpEndpoints()
+    .WithReference(apiService)
+    .WaitFor(apiService);
+
 builder.Build().Run();

@@ -1,6 +1,6 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.14.36616.10 d17.14
+VisualStudioVersion = 17.14.36616.10
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gringotts.AppHost", "Gringotts.AppHost\Gringotts.AppHost.csproj", "{1632CF46-6906-44E6-8572-89F1AA4C30B5}"
 EndProject
@@ -11,6 +11,18 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gringotts.Web", "Gringotts.Web\Gringotts.Web.csproj", "{D5EBCEB7-03E5-74F5-9A82-2044877C66E1}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gringotts.Tests", "Gringotts.Tests\Gringotts.Tests.csproj", "{34EEA8F3-52C4-F1DF-1E39-C9246704DC1E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gringotts.Domain", "Gringotts.Domain\Gringotts.Domain.csproj", "{3900FB8D-C47A-4B2A-A1A7-1E26E5039A07}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gringotts.Application", "Gringotts.Application\Gringotts.Application.csproj", "{518D36E7-EA67-4608-8FB2-421E3DA9A1CD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gringotts.Infrastructure", "Gringotts.Infrastructure\Gringotts.Infrastructure.csproj", "{7EC61A2D-E915-400B-AA9C-399C1CC8E368}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gringotts.Contracts", "Gringotts.Contracts\Gringotts.Contracts.csproj", "{87AF7E91-59BF-4AC8-BB52-76C344A26877}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gringotts.Shared", "Gringotts.Shared\Gringotts.Shared.csproj", "{05ABD473-9AD4-47C4-A6A8-3CD4B95BFB6E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gringotts.Bot", "Gringotts.Bot\Gringotts.Bot.csproj", "{E00F0BEB-31E1-4F81-935A-24F4C30B7ABB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -38,6 +50,30 @@ Global
 		{34EEA8F3-52C4-F1DF-1E39-C9246704DC1E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{34EEA8F3-52C4-F1DF-1E39-C9246704DC1E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{34EEA8F3-52C4-F1DF-1E39-C9246704DC1E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3900FB8D-C47A-4B2A-A1A7-1E26E5039A07}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3900FB8D-C47A-4B2A-A1A7-1E26E5039A07}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3900FB8D-C47A-4B2A-A1A7-1E26E5039A07}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3900FB8D-C47A-4B2A-A1A7-1E26E5039A07}.Release|Any CPU.Build.0 = Release|Any CPU
+		{518D36E7-EA67-4608-8FB2-421E3DA9A1CD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{518D36E7-EA67-4608-8FB2-421E3DA9A1CD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{518D36E7-EA67-4608-8FB2-421E3DA9A1CD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{518D36E7-EA67-4608-8FB2-421E3DA9A1CD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7EC61A2D-E915-400B-AA9C-399C1CC8E368}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7EC61A2D-E915-400B-AA9C-399C1CC8E368}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7EC61A2D-E915-400B-AA9C-399C1CC8E368}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7EC61A2D-E915-400B-AA9C-399C1CC8E368}.Release|Any CPU.Build.0 = Release|Any CPU
+		{87AF7E91-59BF-4AC8-BB52-76C344A26877}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{87AF7E91-59BF-4AC8-BB52-76C344A26877}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{87AF7E91-59BF-4AC8-BB52-76C344A26877}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{87AF7E91-59BF-4AC8-BB52-76C344A26877}.Release|Any CPU.Build.0 = Release|Any CPU
+		{05ABD473-9AD4-47C4-A6A8-3CD4B95BFB6E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{05ABD473-9AD4-47C4-A6A8-3CD4B95BFB6E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{05ABD473-9AD4-47C4-A6A8-3CD4B95BFB6E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{05ABD473-9AD4-47C4-A6A8-3CD4B95BFB6E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E00F0BEB-31E1-4F81-935A-24F4C30B7ABB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E00F0BEB-31E1-4F81-935A-24F4C30B7ABB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E00F0BEB-31E1-4F81-935A-24F4C30B7ABB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E00F0BEB-31E1-4F81-935A-24F4C30B7ABB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
