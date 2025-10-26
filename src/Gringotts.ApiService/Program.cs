@@ -1,7 +1,20 @@
+using Gringotts.Infrastructure.UnitOfWork;
+using Gringotts.Infrastructure.Interfaces;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add service defaults & Aspire client integrations.
 builder.AddServiceDefaults();
+
+// Configure database connection for Postgres
+var connectionString = builder.Configuration.GetConnectionString("Postgres")
+    ?? builder.Configuration["Postgres:ConnectionString"]
+    ?? Environment.GetEnvironmentVariable("POSTGRES_CONNECTION")
+    // Default assumes the AppHost container named 'postgres' is reachable by that host name
+    ?? "Host=postgres;Port=5432;Username=postgres;Password=postgres;Database=gringotts;";
+
+// Register UnitOfWork factory for Dapper/Npgsql access
+builder.Services.AddSingleton<IUnitOfWorkFactory>(new UnitOfWorkFactory(connectionString));
 
 // Add services to the container.
 builder.Services.AddProblemDetails();
