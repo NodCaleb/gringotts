@@ -19,4 +19,8 @@
 		<PackageReference Include="Npgsql" Version="9.0.4" />
 	</ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="Gringotts.Tests" />
+  </ItemGroup>
+
 </Project>

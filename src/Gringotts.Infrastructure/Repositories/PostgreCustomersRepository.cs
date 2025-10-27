@@ -11,7 +11,7 @@ internal class PostgreCustomersRepository : ICustomersRepository
 
     public async Task<Customer?> GetByIdAsync(long id, IDbConnection connection, IDbTransaction transaction, CancellationToken cancellationToken = default)
     {
-        var sql = $@"SELECT id, user_name AS ""UserName"", personal_name AS ""PersonalName"", character_name AS ""CharacterName"", balance
+        var sql = $@"SELECT id, username AS ""UserName"", personalname AS ""PersonalName"", charactername AS ""CharacterName"", balance
                     FROM {TableName}
                     WHERE id = @Id";
 
@@ -21,7 +21,7 @@ internal class PostgreCustomersRepository : ICustomersRepository
 
     public async Task<IReadOnlyList<Customer>> GetAllAsync(IDbConnection connection, IDbTransaction transaction, CancellationToken cancellationToken = default)
     {
-        var sql = $@"SELECT id, user_name AS ""UserName"", personal_name AS ""PersonalName"", character_name AS ""CharacterName"", balance
+        var sql = $@"SELECT id, username AS ""UserName"", personalname AS ""PersonalName"", charactername AS ""CharacterName"", balance
                     FROM {TableName}
                     ORDER BY id";
 
@@ -32,7 +32,7 @@ internal class PostgreCustomersRepository : ICustomersRepository
 
     public async Task<Customer> AddAsync(Customer customer, IDbConnection connection, IDbTransaction transaction, CancellationToken cancellationToken = default)
     {
-        var sql = $@"INSERT INTO {TableName} (user_name, personal_name, character_name, balance)
+        var sql = $@"INSERT INTO {TableName} (username, personalname, charactername, balance)
                     VALUES (@UserName, @PersonalName, @CharacterName, @Balance)
                     RETURNING id";
 
@@ -52,9 +52,9 @@ internal class PostgreCustomersRepository : ICustomersRepository
     public async Task UpdateAsync(Customer customer, IDbConnection connection, IDbTransaction transaction, CancellationToken cancellationToken = default)
     {
         var sql = $@"UPDATE {TableName}
-                    SET user_name = @UserName,
-                        personal_name = @PersonalName,
-                        character_name = @CharacterName,
+                    SET username = @UserName,
+                        personalname = @PersonalName,
+                        charactername = @CharacterName,
                         balance = @Balance
                     WHERE id = @Id";
 
