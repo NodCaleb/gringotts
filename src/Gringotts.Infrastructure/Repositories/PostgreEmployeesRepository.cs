@@ -1,7 +1,7 @@
 using System.Data;
 using Dapper;
 using Gringotts.Domain.Entities;
-using Gringotts.Infrastructure.Interfaces;
+using Gringotts.Infrastructure.Contracts;
 
 namespace Gringotts.Infrastructure.Repositories;
 

@@ -1,5 +1,5 @@
 ﻿using System;
-using Gringotts.Infrastructure.Interfaces;
+using Gringotts.Infrastructure.Contracts;
 using Npgsql;
 
 namespace Gringotts.Infrastructure.UnitOfWork;

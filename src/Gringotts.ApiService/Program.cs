@@ -1,5 +1,5 @@
 using Gringotts.Infrastructure.UnitOfWork;
-using Gringotts.Infrastructure.Interfaces;
+using Gringotts.Infrastructure.Contracts;
 
 var builder = WebApplication.CreateBuilder(args);
 

@@ -1,4 +1,4 @@
-﻿using Gringotts.Infrastructure.Interfaces;
+﻿using Gringotts.Infrastructure.Contracts;
 using Npgsql;
 using System.Data;
 

@@ -1,4 +1,4 @@
-﻿namespace Gringotts.Infrastructure.Interfaces;
+﻿namespace Gringotts.Infrastructure.Contracts;
 
 public interface IUnitOfWorkFactory
 {
