@@ -3,7 +3,7 @@ using Gringotts.Domain.Entities;
 
 namespace Gringotts.Infrastructure.Interfaces;
 
-public interface ITransactionRepository
+public interface ITransactionsRepository
 {
     Task<Transaction?> GetByIdAsync(Guid id, IDbConnection connection, IDbTransaction dbTransaction, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<Transaction>> GetAllAsync(IDbConnection connection, IDbTransaction dbTransaction, CancellationToken cancellationToken = default);

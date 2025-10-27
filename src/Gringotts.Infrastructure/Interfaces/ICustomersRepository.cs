@@ -3,7 +3,7 @@ using Gringotts.Domain.Entities;
 
 namespace Gringotts.Infrastructure.Interfaces;
 
-public interface ICustomerRepository
+public interface ICustomersRepository
 {
     Task<Customer?> GetByIdAsync(long id, IDbConnection connection, IDbTransaction transaction, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<Customer>> GetAllAsync(IDbConnection connection, IDbTransaction transaction, CancellationToken cancellationToken = default);
