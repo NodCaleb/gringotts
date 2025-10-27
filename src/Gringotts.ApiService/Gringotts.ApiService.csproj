@@ -8,13 +8,10 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Gringotts.ServiceDefaults\Gringotts.ServiceDefaults.csproj" />
-    <ProjectReference Include="..\Gringotts.Infrastructure\Gringotts.Infrastructure.csproj" />
-    <ProjectReference Include="..\Gringotts.Domain\Gringotts.Domain.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.9" />
-    <PackageReference Include="Npgsql" Version="9.0.4" />
   </ItemGroup>
 
 </Project>
