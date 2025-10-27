@@ -9,7 +9,7 @@ builder.AddServiceDefaults();
 builder.AddNpgsqlDataSource("gringottsdb");
 
 // Register UnitOfWork factory for Dapper/Npgsql access
-//builder.Services.AddSingleton<IUnitOfWorkFactory>(new UnitOfWorkFactory(connectionString));
+builder.Services.AddSingleton<IUnitOfWorkFactory, UnitOfWorkFactory>();
 
 // Add services to the container.
 builder.Services.AddProblemDetails();
