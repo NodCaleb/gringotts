@@ -5,10 +5,15 @@ var postgres = builder.AddPostgres("postgres")
 
 var gringottsDb = postgres.AddDatabase("gringottsdb");
 
+var seeder = builder.AddProject<Projects.Gringotts_Seeder>("db-seeder")
+    .WithReference(gringottsDb)
+    .WaitFor(gringottsDb);
+
 var apiService = builder.AddProject<Projects.Gringotts_ApiService>("apiservice")
  .WithHttpHealthCheck("/health")
  .WaitFor(gringottsDb)
- .WithReference(gringottsDb);
+ .WithReference(gringottsDb)
+ .WaitForCompletion(seeder);
 
 builder.AddProject<Projects.Gringotts_Web>("webfrontend")
  .WithExternalHttpEndpoints()
