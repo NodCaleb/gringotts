@@ -6,13 +6,15 @@ namespace Gringotts.Infrastructure.UnitOfWork;
 
 internal class DapperUnitOfWork : IUnitOfWork
 {
+    private readonly NpgsqlDataSource _dataSource;
     private readonly NpgsqlConnection _connection;
     private IDbTransaction _transaction;
     private bool _disposed;
 
-    public DapperUnitOfWork(string connectionString)
+    public DapperUnitOfWork(NpgsqlDataSource dataSource)
     {
-        _connection = new NpgsqlConnection(connectionString);
+        _dataSource = dataSource ?? throw new ArgumentNullException(nameof(dataSource));
+        _connection = _dataSource.CreateConnection();
         _connection.Open();
         _transaction = _connection.BeginTransaction();
     }
@@ -46,6 +48,7 @@ internal class DapperUnitOfWork : IUnitOfWork
         {
             _transaction?.Dispose();
             _connection?.Dispose();
+            // Note: do not dispose the injected NpgsqlDataSource; it is owned by the caller
             _disposed = true;
         }
     }

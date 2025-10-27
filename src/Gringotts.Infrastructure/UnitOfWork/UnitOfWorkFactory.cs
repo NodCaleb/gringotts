@@ -1,18 +1,20 @@
-﻿using Gringotts.Infrastructure.Interfaces;
+﻿using System;
+using Gringotts.Infrastructure.Interfaces;
+using Npgsql;
 
 namespace Gringotts.Infrastructure.UnitOfWork;
 
 public class UnitOfWorkFactory : IUnitOfWorkFactory
 {
-    private readonly string _connectionString;
+    private readonly NpgsqlDataSource _dataSource;
 
-    public UnitOfWorkFactory(string connectionString)
+    public UnitOfWorkFactory(NpgsqlDataSource dataSource)
     {
-        _connectionString = connectionString;
+        _dataSource = dataSource ?? throw new ArgumentNullException(nameof(dataSource));
     }
 
     public IUnitOfWork Create()
     {
-        return new DapperUnitOfWork(_connectionString);
+        return new DapperUnitOfWork(_dataSource);
     }
 }

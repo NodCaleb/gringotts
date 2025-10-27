@@ -13,11 +13,13 @@
   <ItemGroup>
     <ProjectReference Include="..\Gringotts.ApiService\Gringotts.ApiService.csproj" />
     <ProjectReference Include="..\Gringotts.Bot\Gringotts.Bot.csproj" />
+    <ProjectReference Include="..\Gringotts.Seeder\Gringotts.Seeder.csproj" />
     <ProjectReference Include="..\Gringotts.Web\Gringotts.Web.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Aspire.Hosting.AppHost" Version="9.5.0" />
+    <PackageReference Include="Aspire.Hosting.AppHost" Version="9.5.2" />
+    <PackageReference Include="Aspire.Hosting.PostgreSQL" Version="9.5.2" />
   </ItemGroup>
 
 </Project>

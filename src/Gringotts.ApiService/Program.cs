@@ -6,15 +6,10 @@ var builder = WebApplication.CreateBuilder(args);
 // Add service defaults & Aspire client integrations.
 builder.AddServiceDefaults();
 
-// Configure database connection for Postgres
-var connectionString = builder.Configuration.GetConnectionString("Postgres")
-    ?? builder.Configuration["Postgres:ConnectionString"]
-    ?? Environment.GetEnvironmentVariable("POSTGRES_CONNECTION")
-    // Default assumes the AppHost container named 'postgres' is reachable by that host name
-    ?? "Host=postgres;Port=5432;Username=postgres;Password=postgres;Database=gringotts;";
+builder.AddNpgsqlDataSource("gringottsdb");
 
 // Register UnitOfWork factory for Dapper/Npgsql access
-builder.Services.AddSingleton<IUnitOfWorkFactory>(new UnitOfWorkFactory(connectionString));
+builder.Services.AddSingleton<IUnitOfWorkFactory, UnitOfWorkFactory>();
 
 // Add services to the container.
 builder.Services.AddProblemDetails();
@@ -47,6 +42,13 @@ app.MapGet("/weatherforecast", () =>
     return forecast;
 })
 .WithName("GetWeatherForecast");
+
+app.MapGet("/db-ping", async (Npgsql.NpgsqlDataSource ds) =>
+{
+    await using var cmd = ds.CreateCommand("select 'pong'::text");
+    var result = await cmd.ExecuteScalarAsync();
+    return new { db = result };
+});
 
 app.MapDefaultEndpoints();
 
