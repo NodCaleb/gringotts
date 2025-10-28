@@ -11,9 +11,9 @@ internal class PostgreTransactionsRepository : ITransactionsRepository
 
     public async Task<Transaction?> GetByIdAsync(Guid id, IDbConnection connection, IDbTransaction dbTransaction, CancellationToken cancellationToken = default)
     {
-        var sql = $@"SELECT id, date, senderid AS ""SenderId"", recipientid AS ""RecipientId"", employeeid AS ""EmployeeId"", amount, description
-FROM {TableName}
-WHERE id = @Id";
+        var sql = $@"SELECT *
+            FROM {TableName}
+            WHERE id = @Id";
 
         var cmd = new CommandDefinition(sql, new { Id = id }, transaction: dbTransaction, cancellationToken: cancellationToken);
         return await connection.QuerySingleOrDefaultAsync<Transaction>(cmd);
@@ -21,9 +21,9 @@ WHERE id = @Id";
 
     public async Task<IReadOnlyList<Transaction>> GetAllAsync(IDbConnection connection, IDbTransaction dbTransaction, CancellationToken cancellationToken = default)
     {
-        var sql = $@"SELECT id, date, senderid AS ""SenderId"", recipientid AS ""RecipientId"", employeeid AS ""EmployeeId"", amount, description
-FROM {TableName}
-ORDER BY date";
+        var sql = $@"SELECT *
+            FROM {TableName}
+            ORDER BY date";
 
         var cmd = new CommandDefinition(sql, transaction: dbTransaction, cancellationToken: cancellationToken);
         var result = await connection.QueryAsync<Transaction>(cmd);
@@ -33,8 +33,8 @@ ORDER BY date";
     public async Task<Transaction> AddAsync(Transaction tx, IDbConnection connection, IDbTransaction dbTransaction, CancellationToken cancellationToken = default)
     {
         var sql = $@"INSERT INTO {TableName} (date, senderid, recipientid, employeeid, amount, description)
-VALUES (@Date, @SenderId, @RecipientId, @EmployeeId, @Amount, @Description)
-RETURNING id";
+            VALUES (@Date, @SenderId, @RecipientId, @EmployeeId, @Amount, @Description)
+            RETURNING id";
 
         var cmd = new CommandDefinition(sql, new
         {
@@ -54,13 +54,13 @@ RETURNING id";
     public async Task UpdateAsync(Transaction tx, IDbConnection connection, IDbTransaction dbTransaction, CancellationToken cancellationToken = default)
     {
         var sql = $@"UPDATE {TableName}
-SET date = @Date,
- senderid = @SenderId,
- recipientid = @RecipientId,
- employeeid = @EmployeeId,
- amount = @Amount,
- description = @Description
-WHERE id = @Id";
+            SET date = @Date,
+             senderid = @SenderId,
+             recipientid = @RecipientId,
+             employeeid = @EmployeeId,
+             amount = @Amount,
+             description = @Description
+            WHERE id = @Id";
 
         var cmd = new CommandDefinition(sql, new
         {

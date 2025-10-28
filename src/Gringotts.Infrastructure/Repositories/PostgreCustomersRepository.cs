@@ -11,7 +11,7 @@ internal class PostgreCustomersRepository : ICustomersRepository
 
     public async Task<Customer?> GetByIdAsync(long id, IDbConnection connection, IDbTransaction transaction, CancellationToken cancellationToken = default)
     {
-        var sql = $@"SELECT id, username AS ""UserName"", personalname AS ""PersonalName"", charactername AS ""CharacterName"", balance
+        var sql = $@"SELECT *
                     FROM {TableName}
                     WHERE id = @Id";
 
@@ -21,7 +21,7 @@ internal class PostgreCustomersRepository : ICustomersRepository
 
     public async Task<IReadOnlyList<Customer>> GetAllAsync(IDbConnection connection, IDbTransaction transaction, CancellationToken cancellationToken = default)
     {
-        var sql = $@"SELECT id, username AS ""UserName"", personalname AS ""PersonalName"", charactername AS ""CharacterName"", balance
+        var sql = $@"SELECT *
                     FROM {TableName}
                     ORDER BY id";
 
@@ -75,5 +75,15 @@ internal class PostgreCustomersRepository : ICustomersRepository
         var sql = $"DELETE FROM {TableName} WHERE id = @Id";
         var cmd = new CommandDefinition(sql, new { Id = id }, transaction: transaction, cancellationToken: cancellationToken);
         await connection.ExecuteAsync(cmd);
+    }
+
+    public async Task<Customer?> GetByNameAsync(string userName, IDbConnection connection, IDbTransaction transaction, CancellationToken cancellationToken = default)
+    {
+        var sql = $@"SELECT *
+                    FROM {TableName}
+                    WHERE username = @Username";
+
+        var cmd = new CommandDefinition(sql, new { Username = userName }, transaction: transaction, cancellationToken: cancellationToken);
+        return await connection.QuerySingleOrDefaultAsync<Customer>(cmd);
     }
 }
