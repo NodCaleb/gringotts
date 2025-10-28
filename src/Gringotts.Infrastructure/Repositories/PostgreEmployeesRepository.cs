@@ -70,4 +70,14 @@ internal class PostgreEmployeesRepository : IEmployeesRepository
         var cmd = new CommandDefinition(sql, new { Id = id }, transaction: transaction, cancellationToken: cancellationToken);
         await connection.ExecuteAsync(cmd);
     }
+
+    public async Task<Employee?> GetByNameAsync(string userName, IDbConnection connection, IDbTransaction transaction, CancellationToken cancellationToken = default)
+    {
+        var sql = $@"SELECT *
+            FROM {TableName}
+            WHERE username = @Username";
+
+        var cmd = new CommandDefinition(sql, new { Username = userName }, transaction: transaction, cancellationToken: cancellationToken);
+        return await connection.QuerySingleOrDefaultAsync<Employee>(cmd);
+    }
 }
