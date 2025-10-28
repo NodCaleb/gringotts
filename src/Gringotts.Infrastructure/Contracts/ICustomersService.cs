@@ -1,0 +1,10 @@
+﻿using Gringotts.Domain.Entities;
+
+namespace Gringotts.Infrastructure.Contracts;
+
+public interface ICustomersService
+{
+    Task<CustomerResult> GetCustomerById(long id);
+    Task<CustomerResult> CreateCustomer(Customer customer);
+    Task<CustomerResult> UpdateCustomer(long id, Customer customer);
+}
