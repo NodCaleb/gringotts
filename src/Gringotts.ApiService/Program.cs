@@ -1,5 +1,5 @@
-using Gringotts.Infrastructure.UnitOfWork;
-using Gringotts.Infrastructure.Contracts;
+using Gringotts.ApiService.Endpoints;
+using Gringotts.Infrastructure.Bootstrapping;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -8,8 +8,8 @@ builder.AddServiceDefaults();
 
 builder.AddNpgsqlDataSource("gringottsdb");
 
-// Register UnitOfWork factory for Dapper/Npgsql access
-builder.Services.AddSingleton<IUnitOfWorkFactory, UnitOfWorkFactory>();
+// Register Infrastructure services and repositories
+builder.Services.AddInfrastructure();
 
 // Add services to the container.
 builder.Services.AddProblemDetails();
@@ -43,12 +43,7 @@ app.MapGet("/weatherforecast", () =>
 })
 .WithName("GetWeatherForecast");
 
-app.MapGet("/db-ping", async (Npgsql.NpgsqlDataSource ds) =>
-{
-    await using var cmd = ds.CreateCommand("select 'pong'::text");
-    var result = await cmd.ExecuteScalarAsync();
-    return new { db = result };
-});
+app.MapDbPing();
 
 app.MapDefaultEndpoints();
 

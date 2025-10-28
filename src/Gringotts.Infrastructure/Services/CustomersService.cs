@@ -115,4 +115,43 @@ internal class CustomersService : ICustomersService
             };
         }
     }
+
+    public async Task<CustomerResult> UpdateCharacterName(long id, string name)
+    {
+        if (string.IsNullOrWhiteSpace(name)) throw new ArgumentNullException(nameof(name));
+
+        using var uow = _unitOfWorkFactory.Create();
+        try
+        {
+            var existing = await _customersRepository.GetByIdAsync(id, uow.Connection, uow.Transaction);
+            if (existing == null)
+            {
+                return new CustomerResult
+                {
+                    Success = false,
+                    ErrorMessage = { "Customer not found." }
+                };
+            }
+
+            existing.CharacterName = name;
+
+            await _customersRepository.UpdateAsync(existing, uow.Connection, uow.Transaction);
+            await uow.CommitAsync();
+
+            return new CustomerResult
+            {
+                Success = true,
+                Customer = existing
+            };
+        }
+        catch (Exception ex)
+        {
+            try { await uow.RollbackAsync(); } catch { }
+            return new CustomerResult
+            {
+                Success = false,
+                ErrorMessage = { ex.Message }
+            };
+        }
+    }
 }
