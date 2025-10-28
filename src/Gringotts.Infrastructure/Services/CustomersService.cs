@@ -1,5 +1,6 @@
 ﻿using Gringotts.Infrastructure.Contracts;
 using Gringotts.Domain.Entities;
+using Gringotts.Shared.Enums;
 
 namespace Gringotts.Infrastructure.Services;
 
@@ -25,6 +26,7 @@ internal class CustomersService : ICustomersService
                 return new CustomerResult
                 {
                     Success = false,
+                    ErrorCode = ErrorCode.CustomerNotFound,
                     ErrorMessage = { "Customer not found." }
                 };
             }
@@ -41,6 +43,7 @@ internal class CustomersService : ICustomersService
             return new CustomerResult
             {
                 Success = false,
+                ErrorCode = ErrorCode.InternalError,
                 ErrorMessage = { ex.Message }
             };
         }
@@ -62,12 +65,23 @@ internal class CustomersService : ICustomersService
                 Customer = added
             };
         }
+        catch (ArgumentException aex)
+        {
+            try { await uow.RollbackAsync(); } catch { }
+            return new CustomerResult
+            {
+                Success = false,
+                ErrorCode = ErrorCode.ValidationError,
+                ErrorMessage = { aex.Message }
+            };
+        }
         catch (Exception ex)
         {
             try { await uow.RollbackAsync(); } catch { }
             return new CustomerResult
             {
                 Success = false,
+                ErrorCode = ErrorCode.InternalError,
                 ErrorMessage = { ex.Message }
             };
         }
@@ -86,6 +100,7 @@ internal class CustomersService : ICustomersService
                 return new CustomerResult
                 {
                     Success = false,
+                    ErrorCode = ErrorCode.CustomerNotFound,
                     ErrorMessage = { "Customer not found." }
                 };
             }
@@ -105,12 +120,23 @@ internal class CustomersService : ICustomersService
                 Customer = existing
             };
         }
+        catch (ArgumentException aex)
+        {
+            try { await uow.RollbackAsync(); } catch { }
+            return new CustomerResult
+            {
+                Success = false,
+                ErrorCode = ErrorCode.ValidationError,
+                ErrorMessage = { aex.Message }
+            };
+        }
         catch (Exception ex)
         {
             try { await uow.RollbackAsync(); } catch { }
             return new CustomerResult
             {
                 Success = false,
+                ErrorCode = ErrorCode.InternalError,
                 ErrorMessage = { ex.Message }
             };
         }
@@ -129,6 +155,7 @@ internal class CustomersService : ICustomersService
                 return new CustomerResult
                 {
                     Success = false,
+                    ErrorCode = ErrorCode.CustomerNotFound,
                     ErrorMessage = { "Customer not found." }
                 };
             }
@@ -144,12 +171,23 @@ internal class CustomersService : ICustomersService
                 Customer = existing
             };
         }
+        catch (ArgumentException aex)
+        {
+            try { await uow.RollbackAsync(); } catch { }
+            return new CustomerResult
+            {
+                Success = false,
+                ErrorCode = ErrorCode.ValidationError,
+                ErrorMessage = { aex.Message }
+            };
+        }
         catch (Exception ex)
         {
             try { await uow.RollbackAsync(); } catch { }
             return new CustomerResult
             {
                 Success = false,
+                ErrorCode = ErrorCode.InternalError,
                 ErrorMessage = { ex.Message }
             };
         }
