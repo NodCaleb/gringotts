@@ -6,4 +6,6 @@ public enum ErrorCode
     CustomerNotFound = 1,
     InternalError = 2,
     ValidationError = 3,
+    EmployeeNotFound = 4,
+    AuthenticationFailed = 5,
 }

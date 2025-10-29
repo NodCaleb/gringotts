@@ -1,5 +1,6 @@
 ﻿using Gringotts.Infrastructure.Contracts;
 using Gringotts.Domain.Entities;
+using Gringotts.Shared.Enums;
 
 namespace Gringotts.Infrastructure.Services;
 
@@ -22,6 +23,7 @@ internal class AuthService : IAuthService
         {
             result.ErrorMessage.Add("User name must be provided.");
             result.Success = false;
+            result.ErrorCode = ErrorCode.ValidationError;
             return result;
         }
 
@@ -30,6 +32,7 @@ internal class AuthService : IAuthService
         {
             result.ErrorMessage.Add("Access code must be provided and non-zero.");
             result.Success = false;
+            result.ErrorCode = ErrorCode.ValidationError;
             return result;
         }
 
@@ -49,6 +52,7 @@ internal class AuthService : IAuthService
             result.ErrorMessage.Add("Failed to retrieve employee.");
             result.ErrorMessage.Add(ex.Message);
             result.Success = false;
+            result.ErrorCode = ErrorCode.InternalError;
             return result;
         }
 
@@ -56,6 +60,7 @@ internal class AuthService : IAuthService
         {
             result.ErrorMessage.Add("Employee not found.");
             result.Success = false;
+            result.ErrorCode = ErrorCode.EmployeeNotFound;
             return result;
         }
 
@@ -63,10 +68,12 @@ internal class AuthService : IAuthService
         {
             result.ErrorMessage.Add("Access code does not match.");
             result.Success = false;
+            result.ErrorCode = ErrorCode.AuthenticationFailed;
             return result;
         }
 
         result.Success = true;
+        result.ErrorCode = ErrorCode.None;
         return result;
     }
 }
