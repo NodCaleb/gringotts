@@ -1,6 +1,7 @@
 ﻿using Gringotts.Domain.Entities;
 using Gringotts.Infrastructure.Contracts;
 using Gringotts.Shared.Enums;
+using Gringotts.Contracts.Responses;
 
 namespace Gringotts.ApiService.Endpoints;
 
@@ -19,12 +20,15 @@ public static class CustomersEndpoints
             var result = await customersService.GetCustomerById(id);
             if (result.Success && result.Customer != null)
             {
-                return Results.Ok(result.Customer);
+                var response = new CustomerResponse { ErrorCode = ErrorCode.None, Customer = result.Customer };
+                return Results.Ok(response);
             }
+
+            var errorResponse = new BaseResponse { ErrorCode = result.ErrorCode, Errors = result.ErrorMessage };
 
             if (result.ErrorCode == ErrorCode.CustomerNotFound)
             {
-                return Results.NotFound(new { errors = result.ErrorMessage });
+                return Results.NotFound(errorResponse);
             }
 
             return Results.Problem(detail: result.ErrorMessage.FirstOrDefault() ?? "An error occurred.");
@@ -36,12 +40,15 @@ public static class CustomersEndpoints
             var result = await customersService.CreateCustomer(customer);
             if (result.Success && result.Customer != null)
             {
-                return Results.Created($"/customers/{result.Customer.Id}", result.Customer);
+                var response = new CustomerResponse { ErrorCode = ErrorCode.None, Customer = result.Customer };
+                return Results.Created($"/customers/{result.Customer.Id}", response);
             }
+
+            var errorResponse = new BaseResponse { ErrorCode = result.ErrorCode, Errors = result.ErrorMessage };
 
             if (result.ErrorCode == ErrorCode.ValidationError)
             {
-                return Results.BadRequest(new { errors = result.ErrorMessage });
+                return Results.BadRequest(errorResponse);
             }
 
             return Results.Problem(detail: result.ErrorMessage.FirstOrDefault() ?? "An error occurred.");
@@ -52,23 +59,27 @@ public static class CustomersEndpoints
         {
             if (update == null || string.IsNullOrWhiteSpace(update.CharacterName))
             {
-                return Results.BadRequest(new { errors = new[] { "CharacterName is required." } });
+                var bad = new BaseResponse { ErrorCode = ErrorCode.ValidationError, Errors = new List<string> { "CharacterName is required." } };
+                return Results.BadRequest(bad);
             }
 
             var result = await customersService.UpdateCharacterName(id, update.CharacterName);
             if (result.Success && result.Customer != null)
             {
-                return Results.Ok(result.Customer);
+                var response = new CustomerResponse { ErrorCode = ErrorCode.None, Customer = result.Customer };
+                return Results.Ok(response);
             }
+
+            var errorResponse = new BaseResponse { ErrorCode = result.ErrorCode, Errors = result.ErrorMessage };
 
             if (result.ErrorCode == ErrorCode.CustomerNotFound)
             {
-                return Results.NotFound(new { errors = result.ErrorMessage });
+                return Results.NotFound(errorResponse);
             }
 
             if (result.ErrorCode == ErrorCode.ValidationError)
             {
-                return Results.BadRequest(new { errors = result.ErrorMessage });
+                return Results.BadRequest(errorResponse);
             }
 
             return Results.Problem(detail: result.ErrorMessage.FirstOrDefault() ?? "An error occurred.");

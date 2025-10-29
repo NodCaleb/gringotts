@@ -7,6 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Gringotts.Contracts\Gringotts.Contracts.csproj" />
     <ProjectReference Include="..\Gringotts.Domain\Gringotts.Domain.csproj" />
     <ProjectReference Include="..\Gringotts.Infrastructure\Gringotts.Infrastructure.csproj" />
     <ProjectReference Include="..\Gringotts.ServiceDefaults\Gringotts.ServiceDefaults.csproj" />
