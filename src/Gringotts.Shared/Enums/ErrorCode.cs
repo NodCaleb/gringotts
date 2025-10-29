@@ -8,4 +8,5 @@ public enum ErrorCode
     ValidationError = 3,
     EmployeeNotFound = 4,
     AuthenticationFailed = 5,
+    InsufficientFunds = 6,
 }

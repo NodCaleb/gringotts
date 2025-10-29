@@ -1,5 +1,6 @@
 ﻿using Gringotts.Infrastructure.Contracts;
 using Gringotts.Domain.Entities;
+using Gringotts.Shared.Enums;
 
 namespace Gringotts.Infrastructure.Services;
 
@@ -27,34 +28,43 @@ internal class TransactionsService : ITransactionsService
         if (request == null) throw new ArgumentNullException(nameof(request));
 
         // basic validations
-        if (request.RecipientId <= 0)
+        if ((request.RecipientId <= 0) && string.IsNullOrWhiteSpace(request.RecipientUsername))
         {
-            return new TransactionResult { Success = false, ErrorMessage = { "RecipientId is required." } };
+            return new TransactionResult { Success = false, ErrorCode = ErrorCode.ValidationError, ErrorMessage = { "Either RecipientId or RecipientUsername is required." } };
         }
 
         if (request.SenderId == null && request.EmployeeId == null)
         {
-            return new TransactionResult { Success = false, ErrorMessage = { "Either SenderId or EmployeeId must be provided." } };
+            return new TransactionResult { Success = false, ErrorCode = ErrorCode.ValidationError, ErrorMessage = { "Either SenderId or EmployeeId must be provided." } };
         }
 
         if (request.Amount <= 0)
         {
-            return new TransactionResult { Success = false, ErrorMessage = { "Amount must be positive." } };
+            return new TransactionResult { Success = false, ErrorCode = ErrorCode.ValidationError, ErrorMessage = { "Amount must be positive." } };
         }
 
         if (string.IsNullOrWhiteSpace(request.Description))
         {
-            return new TransactionResult { Success = false, ErrorMessage = { "Description is required." } };
+            return new TransactionResult { Success = false, ErrorCode = ErrorCode.ValidationError, ErrorMessage = { "Description is required." } };
         }
 
         using var uow = _unitOfWorkFactory.Create();
         try
         {
-            // load recipient
-            var recipient = await _customersRepository.GetByIdAsync(request.RecipientId, uow.Connection, uow.Transaction);
+            // load recipient by id or username
+            Customer? recipient = null;
+            if (request.RecipientId > 0)
+            {
+                recipient = await _customersRepository.GetByIdAsync(request.RecipientId, uow.Connection, uow.Transaction);
+            }
+            else
+            {
+                recipient = await _customersRepository.GetByNameAsync(request.RecipientUsername!, uow.Connection, uow.Transaction);
+            }
+
             if (recipient == null)
             {
-                return new TransactionResult { Success = false, ErrorMessage = { "Recipient not found." } };
+                return new TransactionResult { Success = false, ErrorCode = ErrorCode.CustomerNotFound, ErrorMessage = { "Recipient not found." } };
             }
 
             Customer? sender = null;
@@ -63,13 +73,13 @@ internal class TransactionsService : ITransactionsService
                 sender = await _customersRepository.GetByIdAsync(request.SenderId.Value, uow.Connection, uow.Transaction);
                 if (sender == null)
                 {
-                    return new TransactionResult { Success = false, ErrorMessage = { "Sender not found." } };
+                    return new TransactionResult { Success = false, ErrorCode = ErrorCode.CustomerNotFound, ErrorMessage = { "Sender not found." } };
                 }
 
                 // ensure sender has sufficient funds
                 if (sender.Balance < request.Amount)
                 {
-                    return new TransactionResult { Success = false, ErrorMessage = { "Sender has insufficient funds." } };
+                    return new TransactionResult { Success = false, ErrorCode = ErrorCode.InsufficientFunds, ErrorMessage = { "Sender has insufficient funds." } };
                 }
             }
 
@@ -79,7 +89,7 @@ internal class TransactionsService : ITransactionsService
                 var employee = await _employeesRepository.GetByIdAsync(request.EmployeeId.Value, uow.Connection, uow.Transaction);
                 if (employee == null)
                 {
-                    return new TransactionResult { Success = false, ErrorMessage = { "Employee not found." } };
+                    return new TransactionResult { Success = false, ErrorCode = ErrorCode.EmployeeNotFound, ErrorMessage = { "Employee not found." } };
                 }
             }
 
@@ -88,7 +98,7 @@ internal class TransactionsService : ITransactionsService
             {
                 Date = DateTime.UtcNow,
                 SenderId = request.SenderId,
-                RecipientId = request.RecipientId,
+                RecipientId = recipient.Id,
                 EmployeeId = request.EmployeeId,
                 Amount = request.Amount,
                 Description = request.Description
@@ -110,12 +120,12 @@ internal class TransactionsService : ITransactionsService
 
             await uow.CommitAsync();
 
-            return new TransactionResult { Success = true, Transaction = added };
+            return new TransactionResult { Success = true, Transaction = added, ErrorCode = ErrorCode.None };
         }
         catch (Exception ex)
         {
             try { await uow.RollbackAsync(); } catch { }
-            return new TransactionResult { Success = false, ErrorMessage = { ex.Message } };
+            return new TransactionResult { Success = false, ErrorCode = ErrorCode.InternalError, ErrorMessage = { ex.Message } };
         }
     }
 }
