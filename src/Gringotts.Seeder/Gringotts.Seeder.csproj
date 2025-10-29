@@ -13,4 +13,14 @@
 		<PackageReference Include="Npgsql" Version="9.0.4" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <None Update="Database\create_tables_postgres.sql">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </None>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="Data\" />
+	</ItemGroup>
+
 </Project>
