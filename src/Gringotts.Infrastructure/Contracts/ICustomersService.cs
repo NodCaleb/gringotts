@@ -1,4 +1,5 @@
-﻿using Gringotts.Domain.Entities;
+﻿using Gringotts.Contracts.Results;
+using Gringotts.Domain.Entities;
 
 namespace Gringotts.Infrastructure.Contracts;
 

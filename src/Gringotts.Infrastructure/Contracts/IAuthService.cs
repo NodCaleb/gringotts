@@ -1,4 +1,6 @@
-﻿namespace Gringotts.Infrastructure.Contracts;
+﻿using Gringotts.Contracts.Results;
+
+namespace Gringotts.Infrastructure.Contracts;
 
 public interface IAuthService
 {

@@ -1,6 +1,6 @@
 ﻿using Gringotts.Shared.Enums;
 
-namespace Gringotts.Infrastructure.Contracts;
+namespace Gringotts.Contracts.Results;
 
 public class Result
 {

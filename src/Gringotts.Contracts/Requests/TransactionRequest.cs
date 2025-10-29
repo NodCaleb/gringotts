@@ -1,4 +1,4 @@
-﻿namespace Gringotts.Infrastructure.Contracts;
+﻿namespace Gringotts.Contracts.Requests;
 
 public class TransactionRequest
 {

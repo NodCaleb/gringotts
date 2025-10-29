@@ -1,6 +1,6 @@
 ﻿using Gringotts.Domain.Entities;
 
-namespace Gringotts.Infrastructure.Contracts;
+namespace Gringotts.Contracts.Results;
 
 public class TransactionResult : Result
 {
