@@ -24,6 +24,7 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="Gringotts.Tests" />
+    <InternalsVisibleTo Include="Gringotts.Infrastructure.IntegrationTests" />
   </ItemGroup>
 
 </Project>

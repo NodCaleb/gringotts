@@ -19,10 +19,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Gringotts.AppHost\Gringotts.AppHost.csproj" />
-    <ProjectReference Include="..\Gringotts.Domain\Gringotts.Domain.csproj" />
-    <ProjectReference Include="..\Gringotts.Infrastructure\Gringotts.Infrastructure.csproj" />
-    <ProjectReference Include="..\Gringotts.Web\Gringotts.Web.csproj" />
+    <ProjectReference Include="..\..\src\Gringotts.AppHost\Gringotts.AppHost.csproj" />
+    <ProjectReference Include="..\..\src\Gringotts.Domain\Gringotts.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Gringotts.Infrastructure\Gringotts.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\Gringotts.Web\Gringotts.Web.csproj" />
   </ItemGroup>
 
   <ItemGroup>

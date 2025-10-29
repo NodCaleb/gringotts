@@ -1,6 +1,6 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
-VisualStudioVersion = 18.0.11121.172 d18.0
+VisualStudioVersion = 18.0.11121.172
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gringotts.AppHost", "Gringotts.AppHost\Gringotts.AppHost.csproj", "{1632CF46-6906-44E6-8572-89F1AA4C30B5}"
 EndProject
@@ -9,8 +9,6 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gringotts.ApiService", "Gringotts.ApiService\Gringotts.ApiService.csproj", "{80C97EAC-D4CB-9B18-AAF4-E8486F07F918}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gringotts.Web", "Gringotts.Web\Gringotts.Web.csproj", "{D5EBCEB7-03E5-74F5-9A82-2044877C66E1}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gringotts.Tests", "Gringotts.Tests\Gringotts.Tests.csproj", "{34EEA8F3-52C4-F1DF-1E39-C9246704DC1E}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gringotts.Domain", "Gringotts.Domain\Gringotts.Domain.csproj", "{3900FB8D-C47A-4B2A-A1A7-1E26E5039A07}"
 EndProject
@@ -25,6 +23,12 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gringotts.Bot", "Gringotts.Bot\Gringotts.Bot.csproj", "{E00F0BEB-31E1-4F81-935A-24F4C30B7ABB}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gringotts.Seeder", "Gringotts.Seeder\Gringotts.Seeder.csproj", "{5A50B28D-05ED-4813-B143-420415ACF059}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gringotts.Infrastructure.IntegrationTests", "..\tests\Gringotts.Infrastructure.IntegrationTests\Gringotts.Infrastructure.IntegrationTests.csproj", "{6276EE94-8823-4C2F-970C-F3B2B7F90506}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{45CF1C35-14E3-494E-9DCA-F737913D4E16}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gringotts.Tests", "..\tests\Gringotts.Tests\Gringotts.Tests.csproj", "{5659913C-0092-9572-8953-A416CBA143E5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -48,10 +52,6 @@ Global
 		{D5EBCEB7-03E5-74F5-9A82-2044877C66E1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D5EBCEB7-03E5-74F5-9A82-2044877C66E1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D5EBCEB7-03E5-74F5-9A82-2044877C66E1}.Release|Any CPU.Build.0 = Release|Any CPU
-		{34EEA8F3-52C4-F1DF-1E39-C9246704DC1E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{34EEA8F3-52C4-F1DF-1E39-C9246704DC1E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{34EEA8F3-52C4-F1DF-1E39-C9246704DC1E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{34EEA8F3-52C4-F1DF-1E39-C9246704DC1E}.Release|Any CPU.Build.0 = Release|Any CPU
 		{3900FB8D-C47A-4B2A-A1A7-1E26E5039A07}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{3900FB8D-C47A-4B2A-A1A7-1E26E5039A07}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3900FB8D-C47A-4B2A-A1A7-1E26E5039A07}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -80,9 +80,21 @@ Global
 		{5A50B28D-05ED-4813-B143-420415ACF059}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5A50B28D-05ED-4813-B143-420415ACF059}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5A50B28D-05ED-4813-B143-420415ACF059}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6276EE94-8823-4C2F-970C-F3B2B7F90506}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6276EE94-8823-4C2F-970C-F3B2B7F90506}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6276EE94-8823-4C2F-970C-F3B2B7F90506}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6276EE94-8823-4C2F-970C-F3B2B7F90506}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5659913C-0092-9572-8953-A416CBA143E5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5659913C-0092-9572-8953-A416CBA143E5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5659913C-0092-9572-8953-A416CBA143E5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5659913C-0092-9572-8953-A416CBA143E5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{6276EE94-8823-4C2F-970C-F3B2B7F90506} = {45CF1C35-14E3-494E-9DCA-F737913D4E16}
+		{5659913C-0092-9572-8953-A416CBA143E5} = {45CF1C35-14E3-494E-9DCA-F737913D4E16}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E44F21AC-23A8-4004-A847-43CBEC12FFA8}

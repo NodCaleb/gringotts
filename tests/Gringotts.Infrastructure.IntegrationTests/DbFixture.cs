@@ -1,7 +1,7 @@
 ﻿using DotNet.Testcontainers.Containers;
 using Testcontainers.PostgreSql;
 
-namespace Gringotts.Tests;
+namespace Gringotts.Infrastructure.IntegrationTests;
 
 public class DbFixture : IAsyncLifetime
 {

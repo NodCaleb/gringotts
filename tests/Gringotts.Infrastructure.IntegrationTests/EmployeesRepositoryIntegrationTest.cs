@@ -4,7 +4,7 @@ using Gringotts.Infrastructure.Repositories;
 using Npgsql;
 using System.Data;
 
-namespace Gringotts.Tests;
+namespace Gringotts.Infrastructure.IntegrationTests;
 
 public class EmployeesRepositoryIntegrationTest : IDisposable, IClassFixture<DbFixture>
 {
