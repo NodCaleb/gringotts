@@ -1,5 +1,4 @@
-﻿using System.Net.Http;
-using System.Net.Http.Json;
+﻿using System.Net.Http.Json;
 using System.Text.Json;
 using Gringotts.Contracts.Requests;
 using Gringotts.Contracts.Responses;
@@ -9,7 +8,7 @@ using Gringotts.Shared.Enums;
 
 namespace Gringotts.Infrastructure.Clients;
 
-public class ApiClient
+public class ApiClient : IApiClient
 {
     private readonly IHttpClientFactory _factory;
     private readonly JsonSerializerOptions _jsonOptions = new() { PropertyNameCaseInsensitive = true };

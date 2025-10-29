@@ -1,5 +1,6 @@
 ﻿using Dapper;
-using Gringotts.Infrastructure.Contracts;
+using Gringotts.Infrastructure.Interfaces;
+using Gringotts.Infrastructure.Interfaces;
 using Gringotts.Infrastructure.Repositories;
 using Npgsql;
 using System.Data;

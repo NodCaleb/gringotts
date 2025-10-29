@@ -1,7 +1,8 @@
-﻿using Gringotts.Infrastructure.Contracts;
+﻿using Gringotts.Infrastructure.Interfaces;
 using Gringotts.Domain.Entities;
 using Gringotts.Shared.Enums;
 using Gringotts.Contracts.Results;
+using Gringotts.Infrastructure.Interfaces;
 
 namespace Gringotts.Infrastructure.Services;
 

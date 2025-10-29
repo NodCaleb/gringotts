@@ -1,6 +1,6 @@
 ﻿using System.Data;
 
-namespace Gringotts.Infrastructure.Contracts;
+namespace Gringotts.Infrastructure.Interfaces;
 
 public interface IUnitOfWork : IDisposable
 {

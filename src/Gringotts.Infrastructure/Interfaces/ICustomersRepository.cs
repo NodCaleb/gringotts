@@ -1,7 +1,7 @@
 using System.Data;
 using Gringotts.Domain.Entities;
 
-namespace Gringotts.Infrastructure.Contracts;
+namespace Gringotts.Infrastructure.Interfaces;
 
 public interface ICustomersRepository
 {

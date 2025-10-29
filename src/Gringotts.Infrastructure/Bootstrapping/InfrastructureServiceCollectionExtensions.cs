@@ -1,7 +1,7 @@
 using Gringotts.Infrastructure.UnitOfWork;
 using Gringotts.Infrastructure.Repositories;
 using Gringotts.Infrastructure.Services;
-using Gringotts.Infrastructure.Contracts;
+using Gringotts.Infrastructure.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Gringotts.Infrastructure.Bootstrapping
