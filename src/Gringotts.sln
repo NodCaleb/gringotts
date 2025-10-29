@@ -30,6 +30,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{45CF1C35
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gringotts.Tests", "..\tests\Gringotts.Tests\Gringotts.Tests.csproj", "{5659913C-0092-9572-8953-A416CBA143E5}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gringotts.Infrastructure.UnitTests", "..\tests\Gringotts.Infrastructure.UnitTests\Gringotts.Infrastructure.UnitTests.csproj", "{B1A1F7F4-E0AE-4B02-BB4B-BFF4A7523926}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -88,6 +90,10 @@ Global
 		{5659913C-0092-9572-8953-A416CBA143E5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5659913C-0092-9572-8953-A416CBA143E5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5659913C-0092-9572-8953-A416CBA143E5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B1A1F7F4-E0AE-4B02-BB4B-BFF4A7523926}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B1A1F7F4-E0AE-4B02-BB4B-BFF4A7523926}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B1A1F7F4-E0AE-4B02-BB4B-BFF4A7523926}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B1A1F7F4-E0AE-4B02-BB4B-BFF4A7523926}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -95,6 +101,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{6276EE94-8823-4C2F-970C-F3B2B7F90506} = {45CF1C35-14E3-494E-9DCA-F737913D4E16}
 		{5659913C-0092-9572-8953-A416CBA143E5} = {45CF1C35-14E3-494E-9DCA-F737913D4E16}
+		{B1A1F7F4-E0AE-4B02-BB4B-BFF4A7523926} = {45CF1C35-14E3-494E-9DCA-F737913D4E16}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E44F21AC-23A8-4004-A847-43CBEC12FFA8}

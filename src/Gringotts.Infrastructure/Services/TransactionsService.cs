@@ -3,7 +3,6 @@ using Gringotts.Domain.Entities;
 using Gringotts.Shared.Enums;
 using Gringotts.Contracts.Requests;
 using Gringotts.Contracts.Results;
-using Gringotts.Infrastructure.Interfaces;
 
 namespace Gringotts.Infrastructure.Services;
 
