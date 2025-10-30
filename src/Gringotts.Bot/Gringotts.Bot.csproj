@@ -16,6 +16,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Gringotts.Domain\Gringotts.Domain.csproj" />
+    <ProjectReference Include="..\Gringotts.Infrastructure\Gringotts.Infrastructure.csproj" />
+    <ProjectReference Include="..\Gringotts.ServiceDefaults\Gringotts.ServiceDefaults.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Update="appsettings.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

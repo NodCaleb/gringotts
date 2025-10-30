@@ -193,4 +193,59 @@ internal class CustomersService : ICustomersService
             };
         }
     }
+
+    // New method: create a customer if none exists with the provided Id; if a customer exists, update its UserName only
+    public async Task<CustomerResult> CreateOrUpdateCustomer(Customer customer)
+    {
+        if (customer == null) throw new ArgumentNullException(nameof(customer));
+
+        using var uow = _unitOfWorkFactory.Create();
+        try
+        {
+            var existing = await _customersRepository.GetByIdAsync(customer.Id, uow.Connection, uow.Transaction);
+            if (existing == null)
+            {
+                var added = await _customersRepository.AddAsync(customer, uow.Connection, uow.Transaction);
+                await uow.CommitAsync();
+
+                return new CustomerResult
+                {
+                    Success = true,
+                    Customer = added
+                };
+            }
+
+            // Update only the UserName for existing customer
+            existing.UserName = customer.UserName;
+
+            await _customersRepository.UpdateAsync(existing, uow.Connection, uow.Transaction);
+            await uow.CommitAsync();
+
+            return new CustomerResult
+            {
+                Success = true,
+                Customer = existing
+            };
+        }
+        catch (ArgumentException aex)
+        {
+            try { await uow.RollbackAsync(); } catch { }
+            return new CustomerResult
+            {
+                Success = false,
+                ErrorCode = ErrorCode.ValidationError,
+                ErrorMessage = { aex.Message }
+            };
+        }
+        catch (Exception ex)
+        {
+            try { await uow.RollbackAsync(); } catch { }
+            return new CustomerResult
+            {
+                Success = false,
+                ErrorCode = ErrorCode.InternalError,
+                ErrorMessage = { ex.Message }
+            };
+        }
+    }
 }

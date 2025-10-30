@@ -9,4 +9,5 @@ public interface ICustomersService
     Task<CustomerResult> CreateCustomer(Customer customer);
     Task<CustomerResult> UpdateCustomer(long id, Customer customer);
     Task<CustomerResult> UpdateCharacterName(long id, string name);
+    Task<CustomerResult> CreateOrUpdateCustomer(Customer customer);
 }

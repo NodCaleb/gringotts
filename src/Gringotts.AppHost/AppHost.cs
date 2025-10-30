@@ -9,19 +9,19 @@ var seeder = builder.AddProject<Projects.Gringotts_Seeder>("db-seeder")
     .WithReference(gringottsDb)
     .WaitFor(gringottsDb);
 
-var apiService = builder.AddProject<Projects.Gringotts_ApiService>("apiservice")
+var apiService = builder.AddProject<Projects.Gringotts_ApiService>("gringotts-api")
  .WithHttpHealthCheck("/health")
  .WaitFor(gringottsDb)
  .WithReference(gringottsDb)
  .WaitForCompletion(seeder);
 
-builder.AddProject<Projects.Gringotts_Web>("webfrontend")
+builder.AddProject<Projects.Gringotts_Web>("web-frontend")
  .WithExternalHttpEndpoints()
  .WithHttpHealthCheck("/health")
  .WithReference(apiService)
  .WaitFor(apiService);
 
-builder.AddProject<Projects.Gringotts_Bot>("bot")
+builder.AddProject<Projects.Gringotts_Bot>("gringotts-bot")
  .WithExternalHttpEndpoints()
  .WithReference(apiService)
  .WaitFor(apiService);

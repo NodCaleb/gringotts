@@ -37,7 +37,7 @@ public static class CustomersEndpoints
         // POST /customers
         app.MapPost("/customers", async (ICustomersService customersService, Customer customer) =>
         {
-            var result = await customersService.CreateCustomer(customer);
+            var result = await customersService.CreateOrUpdateCustomer(customer);
             if (result.Success && result.Customer != null)
             {
                 var response = new CustomerResponse { ErrorCode = ErrorCode.None, Customer = result.Customer };

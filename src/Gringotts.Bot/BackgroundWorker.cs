@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.Hosting;
+﻿using Gringotts.Contracts.Interfaces;
+using Gringotts.Domain.Entities;
+using Microsoft.Extensions.Hosting;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
@@ -9,10 +11,12 @@ internal class BackgroundWorker : BackgroundService
 {
     string _guide = "Бот в разработке";
     private readonly ITelegramBotClient _bot;
+    private readonly IApiClient _apiClient;
 
-    public BackgroundWorker(ITelegramBotClient bot)
+    public BackgroundWorker(ITelegramBotClient bot, IApiClient apiClient)
     {
         _bot = bot;
+        _apiClient = apiClient;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -82,7 +86,7 @@ internal class BackgroundWorker : BackgroundService
         // When we get a command, we react accordingly
         if (text.StartsWith("/"))
         {
-            await HandleCommand(user.Id, text);
+            await HandleCommand(user, text);
             return;
         }
 
@@ -130,49 +134,63 @@ internal class BackgroundWorker : BackgroundService
     }
 
 
-    async Task HandleCommand(long userId, string command)
+    async Task HandleCommand(User user, string command)
     {
         //CodeGuessGame game;
 
-        //switch (command)
-        //{
-        //    case "/start":
-        //        await _bot.SendMessage(
-        //            userId,
-        //            "Привет!" + Environment.NewLine + _guide
-        //        );
-        //        break;
+        switch (command)
+        {
+            case "/start":
+                var username = "@" + user.Username;
+                var fullName = user.FirstName + (string.IsNullOrEmpty(user.LastName) ? "" : " " + user.LastName);
+                var userId = user.Id;
 
-        //    case "/stop":
-        //        _gameService.StopGame(userId.ToString());
-        //        await _bot.SendMessage(
-        //            userId,
-        //            "Игра остановлена" + Environment.NewLine + _guide
-        //        );
-        //        break;
+                var customer = new Customer
+                {
+                    Id = userId,
+                    UserName = username,
+                    PersonalName = fullName
+                };
 
-        //    case "/game1":
-        //        game = new CodeGuessGame(4);
-        //        _gameService.AddGame(userId.ToString(), game);
-        //        await _bot.SendMessage(
-        //            userId,
-        //            $"Я загадал код из {game.CodeLength} уникальных цифр, попробуй угадать ;)"
-        //        );
-        //        break;
+                await _apiClient.CreateCustomerAsync(customer);
 
-        //    case "/game2":
-        //        game = new CodeGuessGame(6, true);
-        //        _gameService.AddGame(userId.ToString(), game);
-        //        await _bot.SendMessage(
-        //            userId,
-        //            $"Я загадал код из {game.CodeLength} цифр (цифры могут повторяться), попробуй угадать ;)"
-        //        );
-        //        break;
+                await _bot.SendMessage(
+                    user.Id,
+                    "Привет!" + Environment.NewLine +
+                    fullName + Environment.NewLine 
+                );
+                break;
 
-        //    case "/menu":
-        //        await SendMenu(userId);
-        //        break;
-        //}
+            //case "/stop":
+            //    _gameService.StopGame(userId.ToString());
+            //    await _bot.SendMessage(
+            //        userId,
+            //        "Игра остановлена" + Environment.NewLine + _guide
+            //    );
+            //    break;
+
+            //case "/game1":
+            //    game = new CodeGuessGame(4);
+            //    _gameService.AddGame(userId.ToString(), game);
+            //    await _bot.SendMessage(
+            //        userId,
+            //        $"Я загадал код из {game.CodeLength} уникальных цифр, попробуй угадать ;)"
+            //    );
+            //    break;
+
+            //case "/game2":
+            //    game = new CodeGuessGame(6, true);
+            //    _gameService.AddGame(userId.ToString(), game);
+            //    await _bot.SendMessage(
+            //        userId,
+            //        $"Я загадал код из {game.CodeLength} цифр (цифры могут повторяться), попробуй угадать ;)"
+            //    );
+            //    break;
+
+            //case "/menu":
+            //    await SendMenu(userId);
+            //    break;
+        }
 
         await Task.CompletedTask;
     }

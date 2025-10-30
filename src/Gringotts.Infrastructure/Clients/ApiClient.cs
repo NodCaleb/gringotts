@@ -1,5 +1,6 @@
 ﻿using System.Net.Http.Json;
 using System.Text.Json;
+using Gringotts.Contracts.Interfaces;
 using Gringotts.Contracts.Requests;
 using Gringotts.Contracts.Responses;
 using Gringotts.Contracts.Results;
@@ -21,7 +22,7 @@ public class ApiClient : IApiClient
     // Auth: POST /auth/check
     public async Task<Result> CheckAccessCodeAsync(string userName, int accessCode, CancellationToken cancellationToken = default)
     {
-        var client = _factory.CreateClient();
+        var client = _factory.CreateClient("GringottsApiClient");
         var payload = new { UserName = userName, AccessCode = accessCode };
         var resp = await client.PostAsJsonAsync("/auth/check", payload, cancellationToken).ConfigureAwait(false);
 
@@ -60,7 +61,7 @@ public class ApiClient : IApiClient
     // Customers: GET /customers/{id}
     public async Task<CustomerResult> GetCustomerByIdAsync(long id, CancellationToken cancellationToken = default)
     {
-        var client = _factory.CreateClient();
+        var client = _factory.CreateClient("GringottsApiClient");
         var resp = await client.GetAsync($"/customers/{id}", cancellationToken).ConfigureAwait(false);
 
         if (resp.IsSuccessStatusCode)
@@ -86,7 +87,7 @@ public class ApiClient : IApiClient
     // POST /customers
     public async Task<CustomerResult> CreateCustomerAsync(Customer customer, CancellationToken cancellationToken = default)
     {
-        var client = _factory.CreateClient();
+        var client = _factory.CreateClient("GringottsApiClient");
         var resp = await client.PostAsJsonAsync("/customers", customer, cancellationToken).ConfigureAwait(false);
 
         if (resp.IsSuccessStatusCode)
@@ -112,7 +113,7 @@ public class ApiClient : IApiClient
     // PATCH /customers/{id}/charactername
     public async Task<CustomerResult> UpdateCharacterNameAsync(long id, string characterName, CancellationToken cancellationToken = default)
     {
-        var client = _factory.CreateClient();
+        var client = _factory.CreateClient("GringottsApiClient");
         var payload = new { CharacterName = characterName };
         var request = new HttpRequestMessage(new HttpMethod("PATCH"), $"/customers/{id}/charactername")
         {
@@ -144,7 +145,7 @@ public class ApiClient : IApiClient
     // POST /transactions
     public async Task<TransactionResult> CreateTransactionAsync(TransactionRequest request, CancellationToken cancellationToken = default)
     {
-        var client = _factory.CreateClient();
+        var client = _factory.CreateClient("GringottsApiClient");
         var resp = await client.PostAsJsonAsync("/transactions", request, cancellationToken).ConfigureAwait(false);
 
         if (resp.IsSuccessStatusCode)
