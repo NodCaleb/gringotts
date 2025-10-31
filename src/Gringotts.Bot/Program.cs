@@ -2,6 +2,7 @@
 
 using Gringotts.Bot;
 using Gringotts.Contracts.Interfaces;
+using Gringotts.Infrastructure.Bootstrapping;
 using Gringotts.Infrastructure.Clients;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -35,7 +36,9 @@ builder.Services.AddHttpClient("GringottsApiClient", client =>
 
 builder.Services.AddSingleton<IApiClient, ApiClient>();
 
-builder.Services.AddHostedService<BackgroundWorker>();
+builder.Services.AddCache("Memory");
+
+builder.Services.AddHostedService<GringottsWorker>();
 
 var host = builder.Build();
 

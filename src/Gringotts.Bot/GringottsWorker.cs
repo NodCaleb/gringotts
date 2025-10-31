@@ -4,19 +4,22 @@ using Microsoft.Extensions.Hosting;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
+using Telegram.Bot.Types.ReplyMarkups;
 
 namespace Gringotts.Bot;
 
-internal class BackgroundWorker : BackgroundService
+internal class GringottsWorker : BackgroundService
 {
     string _guide = "Бот в разработке";
     private readonly ITelegramBotClient _bot;
     private readonly IApiClient _apiClient;
+    private readonly ICache _cache;
 
-    public BackgroundWorker(ITelegramBotClient bot, IApiClient apiClient)
+    public GringottsWorker(ITelegramBotClient bot, IApiClient apiClient, ICache cache)
     {
         _bot = bot;
         _apiClient = apiClient;
+        _cache = cache;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -90,43 +93,6 @@ internal class BackgroundWorker : BackgroundService
             return;
         }
 
-        //var iGame = _gameService.GetGame(user.Id.ToString());
-
-        //if (iGame is not null && iGame.GetType() == typeof(CodeGuessGame))
-        //{
-        //    var game = (CodeGuessGame)iGame;
-
-        //    var response = game.Guess(text);
-
-        //    if (!response.CorrectInput)
-        //    {
-        //        await _bot.SendMessage(
-        //            user.Id,
-        //            $"Пожалуйста, введи {game.CodeLength} цифры!" +
-        //            Environment.NewLine +
-        //            $"Или /stop, чтобы закончить игру"
-        //        );
-        //    }
-        //    else if (response.CorrectGuess)
-        //    {
-        //        await _bot.SendMessage(
-        //            user.Id,
-        //            "Это правильный ответ 😉"
-        //        );
-        //    }
-        //    else
-        //    {
-        //        await _bot.SendMessage(
-        //            user.Id,
-        //            $"Верных цифр в правильном месте: {response.CorrectSymbolAndPositionCount}" +
-        //            Environment.NewLine +
-        //            $"Верных цифр в неправильном месте: {response.CorrectSymbolCount}"
-        //        );
-        //    }
-
-        //    return;
-        //}
-
         await _bot.SendMessage(
             user.Id,
             _guide
@@ -157,39 +123,10 @@ internal class BackgroundWorker : BackgroundService
                 await _bot.SendMessage(
                     user.Id,
                     "Привет!" + Environment.NewLine +
-                    fullName + Environment.NewLine 
+                    fullName + Environment.NewLine,
+                    replyMarkup: MainMenuKeyboard()
                 );
                 break;
-
-            //case "/stop":
-            //    _gameService.StopGame(userId.ToString());
-            //    await _bot.SendMessage(
-            //        userId,
-            //        "Игра остановлена" + Environment.NewLine + _guide
-            //    );
-            //    break;
-
-            //case "/game1":
-            //    game = new CodeGuessGame(4);
-            //    _gameService.AddGame(userId.ToString(), game);
-            //    await _bot.SendMessage(
-            //        userId,
-            //        $"Я загадал код из {game.CodeLength} уникальных цифр, попробуй угадать ;)"
-            //    );
-            //    break;
-
-            //case "/game2":
-            //    game = new CodeGuessGame(6, true);
-            //    _gameService.AddGame(userId.ToString(), game);
-            //    await _bot.SendMessage(
-            //        userId,
-            //        $"Я загадал код из {game.CodeLength} цифр (цифры могут повторяться), попробуй угадать ;)"
-            //    );
-            //    break;
-
-            //case "/menu":
-            //    await SendMenu(userId);
-            //    break;
         }
 
         await Task.CompletedTask;
@@ -207,4 +144,20 @@ internal class BackgroundWorker : BackgroundService
             _guide
         );
     }
+
+    ReplyMarkup MainMenuKeyboard() =>
+    new ReplyKeyboardMarkup(new[]
+    {
+        new []
+        {
+            new KeyboardButton(Buttons.Balance),
+            new KeyboardButton(Buttons.NewPayment),
+        },
+        new []
+        {
+            new KeyboardButton(Buttons.TransactionsHistory),
+            new KeyboardButton(Buttons.CharacterName),
+        }
+    })
+    { ResizeKeyboard = true };
 }
