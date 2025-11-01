@@ -1,16 +1,16 @@
-﻿using Gringotts.Contracts.Interfaces;
+﻿using Gringotts.Bot.Markup;
+using Gringotts.Contracts.Interfaces;
 using Gringotts.Domain.Entities;
 using Microsoft.Extensions.Hosting;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
-using Telegram.Bot.Types.ReplyMarkups;
 
 namespace Gringotts.Bot;
 
 internal class GringottsWorker : BackgroundService
 {
-    string _guide = "Бот в разработке";
+    string _greatings = "Выберите действие";
     private readonly ITelegramBotClient _bot;
     private readonly IApiClient _apiClient;
     private readonly ICache _cache;
@@ -93,9 +93,15 @@ internal class GringottsWorker : BackgroundService
             return;
         }
 
+        if (text == Buttons.Cancel)
+        {
+            await _cache.RemoveAsync(user.Id.ToString());
+        }
+
         await _bot.SendMessage(
             user.Id,
-            _guide
+            _greatings,
+            replyMarkup: Menus.MainMenu
         );
     }
 
@@ -124,7 +130,7 @@ internal class GringottsWorker : BackgroundService
                     user.Id,
                     "Привет!" + Environment.NewLine +
                     fullName + Environment.NewLine,
-                    replyMarkup: MainMenuKeyboard()
+                    replyMarkup: Menus.MainMenu
                 );
                 break;
         }
@@ -141,23 +147,9 @@ internal class GringottsWorker : BackgroundService
     {
         await _bot.SendMessage(
             userId,
-            _guide
+            _greatings
         );
     }
 
-    ReplyMarkup MainMenuKeyboard() =>
-    new ReplyKeyboardMarkup(new[]
-    {
-        new []
-        {
-            new KeyboardButton(Buttons.Balance),
-            new KeyboardButton(Buttons.NewPayment),
-        },
-        new []
-        {
-            new KeyboardButton(Buttons.TransactionsHistory),
-            new KeyboardButton(Buttons.CharacterName),
-        }
-    })
-    { ResizeKeyboard = true };
+    
 }

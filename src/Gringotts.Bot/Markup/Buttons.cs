@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Gringotts.Bot;
+namespace Gringotts.Bot.Markup;
 
 internal static class Buttons
 {
