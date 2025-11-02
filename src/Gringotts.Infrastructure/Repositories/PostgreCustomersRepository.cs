@@ -32,12 +32,13 @@ internal class PostgreCustomersRepository : ICustomersRepository
 
     public async Task<Customer> AddAsync(Customer customer, IDbConnection connection, IDbTransaction transaction, CancellationToken cancellationToken = default)
     {
-        var sql = $@"INSERT INTO {TableName} (username, personalname, charactername, balance)
-                    VALUES (@UserName, @PersonalName, @CharacterName, @Balance)
+        var sql = $@"INSERT INTO {TableName} (id, username, personalname, charactername, balance)
+                    VALUES (@Id, @UserName, @PersonalName, @CharacterName, @Balance)
                     RETURNING id";
 
         var cmd = new CommandDefinition(sql, new
         {
+            customer.Id,
             customer.UserName,
             customer.PersonalName,
             customer.CharacterName,

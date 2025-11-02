@@ -1,6 +1,8 @@
 var builder = DistributedApplication.CreateBuilder(args);
 
-var postgres = builder.AddPostgres("postgres")
+var postgres = builder
+    .AddPostgres("postgres")
+    .WithLifetime(ContainerLifetime.Persistent)
     .WithDataVolume();
 
 var gringottsDb = postgres.AddDatabase("gringottsdb");

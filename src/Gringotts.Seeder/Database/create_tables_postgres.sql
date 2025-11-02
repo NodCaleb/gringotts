@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS public.employees (
 
 -- customer table
 CREATE TABLE IF NOT EXISTS public.customers (
- id BIGSERIAL PRIMARY KEY,
+ id BIGINT PRIMARY KEY,
  username VARCHAR(50) NOT NULL,
  personalname VARCHAR(100) NOT NULL,
  charactername VARCHAR(100) NOT NULL,
