@@ -15,8 +15,28 @@ internal static class Menus
         new []
         {
             new KeyboardButton(Buttons.TransactionsHistory),
-            new KeyboardButton(Buttons.CharacterName),
+            new KeyboardButton(Buttons.CharacterName)
         }
     })
     { ResizeKeyboard = true };
+
+    public static ReplyMarkup CancelMenu =>
+    new ReplyKeyboardMarkup(new[]
+    {
+        new []
+        {
+            new KeyboardButton(Buttons.Cancel),
+        }
+    })
+    { ResizeKeyboard = true };
+
+    public static ReplyMarkup ConfirmMenu =>
+    new InlineKeyboardMarkup(new[]
+    {
+        new []
+        {
+            InlineKeyboardButton.WithCallbackData(Buttons.Confirm, "confirm"),
+            InlineKeyboardButton.WithCallbackData(Buttons.Cancel, "cancel")
+        }
+    });
 }

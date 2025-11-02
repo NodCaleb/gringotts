@@ -1,10 +1,14 @@
-﻿using Gringotts.Bot.Markup;
+﻿using Gringotts.Bot.Flows;
+using Gringotts.Bot.Markup;
 using Gringotts.Contracts.Interfaces;
 using Gringotts.Domain.Entities;
+using Microsoft.AspNetCore.Mvc.Formatters.Xml;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 using Microsoft.Extensions.Hosting;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace Gringotts.Bot;
 
@@ -86,68 +90,165 @@ internal class GringottsWorker : BackgroundService
         // Print to console
         Console.WriteLine($"{user.FirstName} wrote {text}");
 
-        // When we get a command, we react accordingly
-        if (text.StartsWith("/"))
+        var flowEnvelope = await _cache.GetAsync<FlowEnvelope>(user.Id.ToString());
+
+        if (flowEnvelope is not null)
         {
-            await HandleCommand(user, text);
+            var flowState = FlowEnvelopeHelper.Unwrap(flowEnvelope);
+            switch (flowState)
+            {
+                case SetNameFlow setNameFlow:
+                    var characterName = text.Trim();
+                    if (string.IsNullOrEmpty(characterName))
+                    {
+                        await _bot.SendMessage(
+                            user.Id,
+                            "Имя персонажа не может быть пустым. Пожалуйста, введите корректное имя:",
+                            replyMarkup: Menus.CancelMenu
+                        );
+                        return;
+                    }
+
+                    await _cache.SetAsync(
+                        user.Id.ToString(),
+                        FlowEnvelopeHelper.Wrap(
+                            new SetNameFlow(characterName)
+                            )
+                        );
+
+                    await _bot.SendMessage(
+                        user.Id,
+                        $"Введено имя персонажа: {characterName}",
+                        replyMarkup: Menus.ConfirmMenu
+                    );
+                    return;
+
+                default:
+                    // Unknown flow state, remove from cache
+                    await _cache.RemoveAsync(user.Id.ToString());
+                    break;
+            }
+        }
+
+        // Handle buttons and commands accordingly
+        if (text == Commands.Start)
+        {
+            var username = "@" + user.Username;
+            var fullName = user.FirstName + (string.IsNullOrEmpty(user.LastName) ? "" : " " + user.LastName);
+            var userId = user.Id;
+
+            var customer = new Customer
+            {
+                Id = userId,
+                UserName = username,
+                PersonalName = fullName
+            };
+
+            await _apiClient.CreateCustomerAsync(customer);
+
+            await _bot.SendMessage(
+                user.Id,
+                "Привет!" + Environment.NewLine +
+                fullName + Environment.NewLine,
+                replyMarkup: Menus.MainMenu
+            );
+
             return;
         }
 
-        if (text == Buttons.Cancel)
+        if (text == Buttons.Balance || text == Commands.Balance)
+        {
+            var customerResult = await _apiClient.GetCustomerByIdAsync(user.Id);
+            await _bot.SendMessage(
+                user.Id,
+                $"Ваш текущий баланс: {customerResult!.Customer!.Balance:C2}",
+                replyMarkup: Menus.MainMenu
+            );
+            return;
+        }
+
+        if (text == Buttons.CharacterName || text == Commands.CharacterName)
+        {
+            await _cache.SetAsync(
+                user.Id.ToString(),
+                FlowEnvelopeHelper.Wrap(
+                    new SetNameFlow()
+                    )
+                );
+
+            await _bot.SendMessage(
+                user.Id,
+                "Введите имя персонажа:",
+                replyMarkup: Menus.CancelMenu
+            );
+            return;
+        }
+
+        if (text == Buttons.Cancel || text == Commands.Cancel)
         {
             await _cache.RemoveAsync(user.Id.ToString());
         }
 
-        await _bot.SendMessage(
-            user.Id,
-            _greatings,
-            replyMarkup: Menus.MainMenu
-        );
-    }
-
-
-    async Task HandleCommand(User user, string command)
-    {
-        //CodeGuessGame game;
-
-        switch (command)
-        {
-            case "/start":
-                var username = "@" + user.Username;
-                var fullName = user.FirstName + (string.IsNullOrEmpty(user.LastName) ? "" : " " + user.LastName);
-                var userId = user.Id;
-
-                var customer = new Customer
-                {
-                    Id = userId,
-                    UserName = username,
-                    PersonalName = fullName
-                };
-
-                await _apiClient.CreateCustomerAsync(customer);
-
-                await _bot.SendMessage(
-                    user.Id,
-                    "Привет!" + Environment.NewLine +
-                    fullName + Environment.NewLine,
-                    replyMarkup: Menus.MainMenu
-                );
-                break;
-        }
-
-        await Task.CompletedTask;
+        await SendMenu(user.Id);
     }
 
     async Task HandleButton(CallbackQuery query)
     {
+        var user = query.From;
 
+        // Print to console
+        Console.WriteLine($"Callback from {user.FirstName}: {query.Data}");
+
+        if (query.Data == "cancel")
+        {
+            await _cache.RemoveAsync(user.Id.ToString());
+            await _bot.SendMessage(
+                user.Id,
+                "Действие отменено.",
+                replyMarkup: Menus.MainMenu
+            );
+            return;
+        }
+
+        var flowEnvelope = await _cache.GetAsync<FlowEnvelope>(user.Id.ToString());
+
+        if (flowEnvelope is not null)
+        {
+            var flowState = FlowEnvelopeHelper.Unwrap(flowEnvelope);
+            switch (flowState)
+            {
+                case SetNameFlow setNameFlow:
+                    if (query.Data == "confirm")
+                    {
+                        var characterName = setNameFlow.Name;
+
+                        await _apiClient.UpdateCharacterNameAsync(user.Id, characterName!);
+
+                        await _bot.SendMessage(
+                            user.Id,
+                            $"Имя персонажа '{characterName}' сохранено.",
+                            replyMarkup: Menus.MainMenu
+                        );
+                        await _cache.RemoveAsync(user.Id.ToString());
+                        return;
+                    }
+                    break;
+                default:
+                    // Unknown flow state, remove from cache
+                    await _cache.RemoveAsync(user.Id.ToString());
+                    break;
+            }
+        }
+
+        await SendMenu(user.Id);
     }
 
     async Task SendMenu(long userId)
     {
         await _bot.SendMessage(
             userId,
-            _greatings
+            _greatings,
+            replyMarkup: Menus.MainMenu
         );
     }
 

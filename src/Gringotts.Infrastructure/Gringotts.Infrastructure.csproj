@@ -20,10 +20,6 @@
     <ProjectReference Include="..\Gringotts.Shared\Gringotts.Shared.csproj" />
   </ItemGroup>
 
-	<ItemGroup>
-		<PackageReference Include="Npgsql" Version="9.0.4" />
-	</ItemGroup>
-
   <ItemGroup>
     <InternalsVisibleTo Include="Gringotts.Tests" />
     <InternalsVisibleTo Include="Gringotts.Infrastructure.IntegrationTests" />
