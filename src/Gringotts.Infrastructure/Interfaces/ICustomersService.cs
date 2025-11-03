@@ -10,5 +10,6 @@ public interface ICustomersService
     Task<CustomerResult> UpdateCustomer(long id, Customer customer);
     Task<CustomerResult> UpdateCharacterName(long id, string name);
     Task<CustomerResult> CreateOrUpdateCustomer(Customer customer);
-    Task<SearchCustomerResult> SearchCustomer(string substring);
+    Task<CustomersListResult> SearchCustomers(string substring, int? pageNumber = null, int? pageSize = null);
+    Task<CustomersListResult> GetAllCustomers(int? pageNumber = null, int? pageSize = null);
 }

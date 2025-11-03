@@ -2,7 +2,7 @@
 
 namespace Gringotts.Contracts.Results;
 
-public class SearchCustomerResult : Result
+public class CustomersListResult : Result
 {
     public List<Customer> Customers { get; set; } = new ();
 }

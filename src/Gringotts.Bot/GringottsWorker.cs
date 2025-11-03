@@ -161,7 +161,7 @@ internal class GringottsWorker : BackgroundService
             var customerResult = await _apiClient.GetCustomerByIdAsync(user.Id);
             await _bot.SendMessage(
                 user.Id,
-                $"Ваш текущий баланс: {customerResult!.Customer!.Balance:C2}",
+                $"Ваш текущий баланс: {customerResult!.Customer!.Balance:N2}",
                 replyMarkup: Menus.MainMenu
             );
             return;

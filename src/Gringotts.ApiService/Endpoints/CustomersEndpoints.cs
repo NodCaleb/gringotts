@@ -2,6 +2,7 @@
 using Gringotts.Infrastructure.Interfaces;
 using Gringotts.Shared.Enums;
 using Gringotts.Contracts.Responses;
+using Gringotts.Contracts.Results;
 
 namespace Gringotts.ApiService.Endpoints;
 
@@ -11,8 +12,39 @@ public static class CustomersEndpoints
 {
     public static void MapCustomersEndpoints(this WebApplication app)
     {
-        app.MapGet("/customers", () => Results.Json(new { message = "Customers endpoint is under construction." }))
-           .WithName("GetCustomers");
+        app.MapGet("/customers", async (ICustomersService customersService, string? search, int? pageNumber, int? pageSize) =>
+        {
+            // If search query provided, use SearchCustomers, otherwise return all customers (with pagination)
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var listResult = await customersService.SearchCustomers(search, pageNumber, pageSize);
+                if (listResult.Success)
+                {
+                    var resp = new CustomersListResponse { ErrorCode = ErrorCode.None, Customers = listResult.Customers };
+                    return Results.Ok(resp);
+                }
+
+                var error = new BaseResponse { ErrorCode = listResult.ErrorCode, Errors = listResult.ErrorMessage };
+                if (listResult.ErrorCode == ErrorCode.ValidationError)
+                    return Results.BadRequest(error);
+
+                return Results.Problem(detail: listResult.ErrorMessage.FirstOrDefault() ?? "An error occurred.");
+            }
+
+            var allResult = await customersService.GetAllCustomers(pageNumber, pageSize);
+            if (allResult.Success)
+            {
+                var resp = new CustomersListResponse { ErrorCode = ErrorCode.None, Customers = allResult.Customers };
+                return Results.Ok(resp);
+            }
+
+            var err = new BaseResponse { ErrorCode = allResult.ErrorCode, Errors = allResult.ErrorMessage };
+            if (allResult.ErrorCode == ErrorCode.ValidationError)
+                return Results.BadRequest(err);
+
+            return Results.Problem(detail: allResult.ErrorMessage.FirstOrDefault() ?? "An error occurred.");
+        })
+        .WithName("GetCustomers");
 
         // GET /customers/{id}
         app.MapGet("/customers/{id:long}", async (ICustomersService customersService, long id) =>

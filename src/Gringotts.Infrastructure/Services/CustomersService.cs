@@ -249,14 +249,14 @@ internal class CustomersService : ICustomersService
         }
     }
 
-    public async Task<SearchCustomerResult> SearchCustomer(string substring)
+    public async Task<CustomersListResult> SearchCustomers(string substring, int? pageNumber = null, int? pageSize = null)
     {
         using var uow = _unitOfWorkFactory.Create();
         try
         {
-            var customers = await _customersRepository.SearchCustomer(substring, uow.Connection, uow.Transaction);
+            var customers = await _customersRepository.SearchCustomersAsync(substring, uow.Connection, uow.Transaction, pageNumber, pageSize);
 
-            return new SearchCustomerResult
+            return new CustomersListResult
             {
                 Success = true,
                 Customers = customers?.ToList() ?? new List<Customer>()
@@ -265,7 +265,7 @@ internal class CustomersService : ICustomersService
         catch (ArgumentException aex)
         {
             try { await uow.RollbackAsync(); } catch { }
-            return new SearchCustomerResult
+            return new CustomersListResult
             {
                 Success = false,
                 ErrorCode = ErrorCode.ValidationError,
@@ -275,7 +275,42 @@ internal class CustomersService : ICustomersService
         catch (Exception ex)
         {
             try { await uow.RollbackAsync(); } catch { }
-            return new SearchCustomerResult
+            return new CustomersListResult
+            {
+                Success = false,
+                ErrorCode = ErrorCode.InternalError,
+                ErrorMessage = { ex.Message }
+            };
+        }
+    }
+
+    public async Task<CustomersListResult> GetAllCustomers(int? pageNumber = null, int? pageSize = null)
+    {
+        using var uow = _unitOfWorkFactory.Create();
+        try
+        {
+            var customers = await _customersRepository.GetAllAsync(uow.Connection, uow.Transaction, pageNumber, pageSize);
+
+            return new CustomersListResult
+            {
+                Success = true,
+                Customers = customers?.ToList() ?? new List<Customer>()
+            };
+        }
+        catch (ArgumentException aex)
+        {
+            try { await uow.RollbackAsync(); } catch { }
+            return new CustomersListResult
+            {
+                Success = false,
+                ErrorCode = ErrorCode.ValidationError,
+                ErrorMessage = { aex.Message }
+            };
+        }
+        catch (Exception ex)
+        {
+            try { await uow.RollbackAsync(); } catch { }
+            return new CustomersListResult
             {
                 Success = false,
                 ErrorCode = ErrorCode.InternalError,

@@ -19,13 +19,30 @@ internal class PostgreCustomersRepository : ICustomersRepository
         return await connection.QuerySingleOrDefaultAsync<Customer>(cmd);
     }
 
-    public async Task<IReadOnlyList<Customer>> GetAllAsync(IDbConnection connection, IDbTransaction transaction, CancellationToken cancellationToken = default)
+    public Task<IReadOnlyList<Customer>> GetAllAsync(IDbConnection connection, IDbTransaction transaction, CancellationToken cancellationToken = default)
+    {
+        // Delegate to paginated overload with no paging params
+        return GetAllAsync(connection, transaction, null, null, cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<Customer>> GetAllAsync(IDbConnection connection, IDbTransaction transaction, int? pageNumber = null, int? pageSize = null, CancellationToken cancellationToken = default)
     {
         var sql = $@"SELECT *
                     FROM {TableName}
                     ORDER BY id";
 
-        var cmd = new CommandDefinition(sql, transaction: transaction, cancellationToken: cancellationToken);
+        if (pageNumber.HasValue && pageSize.HasValue)
+        {
+            var offset = (pageNumber.Value - 1) * pageSize.Value;
+            sql += " LIMIT @PageSize OFFSET @Offset";
+        }
+
+        var cmd = new CommandDefinition(sql, new
+        {
+            PageSize = pageSize,
+            Offset = (pageNumber.HasValue && pageSize.HasValue) ? (pageNumber.Value - 1) * pageSize.Value : 0
+        }, transaction: transaction, cancellationToken: cancellationToken);
+
         var result = await connection.QueryAsync<Customer>(cmd);
         return result.AsList();
     }
@@ -88,7 +105,7 @@ internal class PostgreCustomersRepository : ICustomersRepository
         return await connection.QuerySingleOrDefaultAsync<Customer>(cmd);
     }
 
-    public async Task<IReadOnlyList<Customer>> SearchCustomer(string substring, IDbConnection connection, IDbTransaction transaction, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<Customer>> SearchCustomersAsync(string substring, IDbConnection connection, IDbTransaction transaction, int? pageNumber = null, int? pageSize = null, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(substring))
         {
@@ -104,7 +121,17 @@ internal class PostgreCustomersRepository : ICustomersRepository
                     OR charactername ILIKE @Pattern
                     ORDER BY id";
 
-        var cmd = new CommandDefinition(sql, new { Pattern = pattern }, transaction: transaction, cancellationToken: cancellationToken);
+        if (pageNumber.HasValue && pageSize.HasValue)
+        {
+            sql += " LIMIT @PageSize OFFSET @Offset";
+        }
+
+        var cmd = new CommandDefinition(sql, new
+        {
+            Pattern = pattern,
+            PageSize = pageSize,
+            Offset = (pageNumber.HasValue && pageSize.HasValue) ? (pageNumber.Value - 1) * pageSize.Value : 0
+        }, transaction: transaction, cancellationToken: cancellationToken);
         var result = await connection.QueryAsync<Customer>(cmd);
         return result.AsList();
     }
