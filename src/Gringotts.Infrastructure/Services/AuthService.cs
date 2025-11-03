@@ -3,6 +3,7 @@ using Gringotts.Infrastructure.Interfaces;
 using Gringotts.Domain.Entities;
 using Gringotts.Shared.Enums;
 using Gringotts.Contracts.Results;
+using Gringotts.Contracts.Responses;
 
 namespace Gringotts.Infrastructure.Services;
 
@@ -79,7 +80,7 @@ internal class AuthService : IAuthService
         return result;
     }
 
-    public async Task<IReadOnlyList<string>> GetEmployeeNamesAsync()
+    public async Task<IReadOnlyList<EmployeeInfo>> GetEmployeeListAsync()
     {
         using var uow = _unitOfWorkFactory.Create();
         try
@@ -87,15 +88,15 @@ internal class AuthService : IAuthService
             var employees = await _employeeRepository.GetAllAsync(uow.Connection, uow.Transaction);
             await uow.CommitAsync();
             if (employees == null)
-                return Array.Empty<string>();
+                return Array.Empty<EmployeeInfo>();
 
-            // Filter out access codes by projecting only usernames
-            return employees.Select(e => e.UserName).ToList();
+            // Filter out access codes by projecting to EmployeeInfo (Id + UserName)
+            return employees.Select(e => new EmployeeInfo { Id = e.Id, UserName = e.UserName }).ToList();
         }
         catch
         {
             await uow.RollbackAsync();
-            return Array.Empty<string>();
+            return Array.Empty<EmployeeInfo>();
         }
     }
 }

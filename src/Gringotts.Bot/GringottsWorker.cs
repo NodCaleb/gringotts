@@ -460,6 +460,8 @@ internal class GringottsWorker : BackgroundService
                         var transferResult = await _apiClient.CreateTransactionAsync(transactionRequest);
                         if (transferResult!.Success)
                         {
+                            var senderInfo = await _apiClient.GetCustomerByIdAsync(user.Id);
+
                             await _bot.SendMessage(
                                 user.Id,
                                 $"Перевод успешно выполнен.{Environment.NewLine}" +
@@ -472,7 +474,7 @@ internal class GringottsWorker : BackgroundService
                             await _bot.SendMessage(
                                 transferFlow.Recipient.Id,
                                 $"Вам поступил перевод.{Environment.NewLine}" +
-                                $"Отправитель: {user.FirstName}{Environment.NewLine}" +
+                                $"Отправитель: {senderInfo.Customer?.ToString() ?? user.FirstName}{Environment.NewLine}" +
                                 $"Сумма: {transferFlow.Amount:N2}{Environment.NewLine}" +
                                 $"Описание: {transferFlow.Description}",
                                 replyMarkup: Menus.MainMenu

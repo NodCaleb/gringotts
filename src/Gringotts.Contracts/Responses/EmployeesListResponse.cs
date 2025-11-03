@@ -6,5 +6,5 @@ public class EmployeesListResponse
 {
     public ErrorCode ErrorCode { get; set; }
     public List<string> Errors { get; set; } = new();
-    public List<string> EmployeeNames { get; set; } = new();
+    public List<EmployeeInfo> Employees { get; set; } = new();
 }

@@ -41,8 +41,8 @@ public static class AuthEndpoints
 
         app.MapGet("/employees", async (IAuthService authService) =>
         {
-            var names = await authService.GetEmployeeNamesAsync();
-            var resp = new EmployeesListResponse { ErrorCode = ErrorCode.None, EmployeeNames = names.ToList() };
+            var infos = await authService.GetEmployeeListAsync();
+            var resp = new EmployeesListResponse { ErrorCode = ErrorCode.None, Employees = infos.ToList() };
             return Results.Ok(resp);
         }).WithName("GetEmployees");
     }
