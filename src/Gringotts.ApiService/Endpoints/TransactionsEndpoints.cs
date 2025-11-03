@@ -52,5 +52,18 @@ public static class TransactionsEndpoints
             var err = new BaseResponse { ErrorCode = result.ErrorCode, Errors = result.ErrorMessage };
             return Results.Problem(detail: result.ErrorMessage.FirstOrDefault() ?? "An error occurred.");
         }).WithName("GetTransactionsByCustomer");
+
+        app.MapGet("/transactions", async (ITransactionsService transactionsService, int? pageNumber, int? pageSize) =>
+        {
+            var result = await transactionsService.GetTransactionsByCustomerAsync(null, pageNumber, pageSize);
+            if (result.Success)
+            {
+                var resp = new TransactionsListResponse { ErrorCode = ErrorCode.None, Transactions = result.Transactions };
+                return Results.Ok(resp);
+            }
+
+            var err = new BaseResponse { ErrorCode = result.ErrorCode, Errors = result.ErrorMessage };
+            return Results.Problem(detail: result.ErrorMessage.FirstOrDefault() ?? "An error occurred.");
+        }).WithName("GetAllTransactions");
     }
 }

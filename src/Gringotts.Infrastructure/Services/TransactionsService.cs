@@ -1,4 +1,5 @@
-﻿using Gringotts.Infrastructure.Interfaces;
+﻿using System.Linq;
+using Gringotts.Infrastructure.Interfaces;
 using Gringotts.Domain.Entities;
 using Gringotts.Shared.Enums;
 using Gringotts.Contracts.Requests;
@@ -132,15 +133,43 @@ internal class TransactionsService : ITransactionsService
         }
     }
 
-    public async Task<TransactionsListResult> GetTransactionsByCustomerAsync(long customerId, int? pageNumber = null, int? pageSize = null)
+    public async Task<TransactionsListResult> GetTransactionsByCustomerAsync(long? customerId = null, int? pageNumber = null, int? pageSize = null)
     {
         using var uow = _unitOfWorkFactory.Create();
         try
         {
-            var list = await _transactionsRepository.GetByCustomerAsync(customerId, uow.Connection, uow.Transaction, pageNumber, pageSize);
-            await uow.CommitAsync();
+            if (customerId.HasValue)
+            {
+                var list = await _transactionsRepository.GetByCustomerAsync(customerId.Value, uow.Connection, uow.Transaction, pageNumber, pageSize);
+                await uow.CommitAsync();
+                return new TransactionsListResult { Success = true, Transactions = list?.ToList() ?? new List<TransactionInfo>() };
+            }
 
-            return new TransactionsListResult { Success = true, Transactions = list?.ToList() ?? new List<TransactionInfo>() };
+            // No customerId provided - return all transactions mapped to TransactionInfo
+            var all = await _transactionsRepository.GetAllAsync(uow.Connection, uow.Transaction);
+            // map to TransactionInfo
+            IEnumerable<TransactionInfo> mapped = all.Select(t => new TransactionInfo
+            {
+                Id = t.Id,
+                Date = t.Date,
+                Amount = t.Amount,
+                Description = t.Description,
+                SenderId = t.SenderId,
+                SenderName = null,
+                RecipientId = t.RecipientId,
+                RecipientName = null,
+                EmployeeId = t.EmployeeId,
+                EmployeeName = null
+            })
+            .OrderByDescending(x => x.Date);
+
+            if (pageNumber.HasValue && pageSize.HasValue)
+            {
+                mapped = mapped.Skip((pageNumber.Value - 1) * pageSize.Value).Take(pageSize.Value);
+            }
+
+            await uow.CommitAsync();
+            return new TransactionsListResult { Success = true, Transactions = mapped.ToList() };
         }
         catch (Exception ex)
         {
