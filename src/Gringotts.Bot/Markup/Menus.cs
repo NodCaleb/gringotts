@@ -1,4 +1,5 @@
-﻿using Telegram.Bot.Types.ReplyMarkups;
+﻿using Gringotts.Domain.Entities;
+using Telegram.Bot.Types.ReplyMarkups;
 
 namespace Gringotts.Bot.Markup;
 
@@ -10,7 +11,7 @@ internal static class Menus
         new []
         {
             new KeyboardButton(Buttons.Balance),
-            new KeyboardButton(Buttons.NewPayment),
+            new KeyboardButton(Buttons.Transfer),
         },
         new []
         {
@@ -39,4 +40,23 @@ internal static class Menus
             InlineKeyboardButton.WithCallbackData(Buttons.Cancel, "cancel")
         }
     });
+
+    public static ReplyMarkup ChooseCustomerMenu(IEnumerable<Customer> customers)
+    {
+        var buttons = new List<InlineKeyboardButton[]>();
+        foreach (var customer in customers)
+        {
+            buttons.Add(new[]
+            {
+                InlineKeyboardButton.WithCallbackData(
+                    $"{customer.ToString()}",
+                    $"{customer.Id}")
+            });
+        }
+        buttons.Add(new[]
+        {
+            InlineKeyboardButton.WithCallbackData(Buttons.Cancel, "cancel")
+        });
+        return new InlineKeyboardMarkup(buttons);
+    }
 }

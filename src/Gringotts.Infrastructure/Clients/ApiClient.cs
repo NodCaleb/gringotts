@@ -182,4 +182,42 @@ public class ApiClient : IApiClient
             ErrorMessage = error?.Errors ?? new List<string>()
         };
     }
+
+    // GET /customers?search=...&pageNumber=...&pageSize=...
+    public async Task<CustomersListResult> SearchCustomersAsync(string? search, int? pageNumber = null, int? pageSize = null, CancellationToken cancellationToken = default)
+    {
+        var client = _factory.CreateClient("GringottsApiClient");
+
+        // Build query string
+        var queryParams = new List<string>();
+        if (!string.IsNullOrWhiteSpace(search))
+            queryParams.Add($"search={Uri.EscapeDataString(search)}");
+        if (pageNumber.HasValue)
+            queryParams.Add($"pageNumber={pageNumber.Value}");
+        if (pageSize.HasValue)
+            queryParams.Add($"pageSize={pageSize.Value}");
+
+        var url = "/customers" + (queryParams.Count > 0 ? "?" + string.Join("&", queryParams) : string.Empty);
+
+        var resp = await client.GetAsync(url, cancellationToken).ConfigureAwait(false);
+
+        if (resp.IsSuccessStatusCode)
+        {
+            var listResp = await resp.Content.ReadFromJsonAsync<CustomersListResponse>(_jsonOptions, cancellationToken).ConfigureAwait(false);
+            return new CustomersListResult
+            {
+                Success = true,
+                ErrorCode = ErrorCode.None,
+                Customers = listResp?.Customers ?? new List<Customer>()
+            };
+        }
+
+        var error = await resp.Content.ReadFromJsonAsync<BaseResponse>(_jsonOptions, cancellationToken).ConfigureAwait(false);
+        return new CustomersListResult
+        {
+            Success = false,
+            ErrorCode = error?.ErrorCode ?? ErrorCode.InternalError,
+            ErrorMessage = error?.Errors ?? new List<string>()
+        };
+    }
 }

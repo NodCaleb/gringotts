@@ -23,4 +23,10 @@ public class Customer
 
     [Column(TypeName = "decimal(18,2)")]
     public decimal Balance { get; set; }
+
+    public override string ToString()
+    {
+        var displayName = string.IsNullOrWhiteSpace(CharacterName) ? PersonalName : CharacterName;
+        return $"{displayName} ({UserName})";
+    }
 }

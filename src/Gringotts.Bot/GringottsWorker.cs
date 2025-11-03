@@ -1,6 +1,7 @@
 ﻿using Gringotts.Bot.Flows;
 using Gringotts.Bot.Markup;
 using Gringotts.Contracts.Interfaces;
+using Gringotts.Contracts.Requests;
 using Gringotts.Domain.Entities;
 using Microsoft.AspNetCore.Mvc.Formatters.Xml;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
@@ -123,6 +124,169 @@ internal class GringottsWorker : BackgroundService
                     );
                     return;
 
+                case TransferFlow transferFlow when transferFlow.Step == "recipient-search":
+
+                    var searchQuery = text.Trim();
+
+                    if (string.IsNullOrEmpty(searchQuery) || searchQuery.Length < 3)
+                    {
+                        await _bot.SendMessage(
+                            user.Id,
+                            "Введите хотя бы 3 символа, жалко вам что-ли:",
+                            replyMarkup: Menus.CancelMenu
+                        );
+                        return;
+                    }
+
+                    var customersResult = await _apiClient.SearchCustomersAsync(searchQuery);
+                    if (customersResult!.Customers!.Count == 0)
+                    {
+                        await _bot.SendMessage(
+                            user.Id,
+                            "Получатели не найдены. Введите другой запрос для поиска:",
+                            replyMarkup: Menus.CancelMenu
+                        );
+                        return;
+                    }
+
+                    if (customersResult!.Customers!.Count == 1)
+                    {
+                        var recipient = customersResult.Customers.Single();
+
+                        await _cache.SetAsync(
+                        user.Id.ToString(),
+                        FlowEnvelopeHelper.Wrap(
+                            transferFlow with
+                            {
+                                Step = "amount-enter",
+                                Recipient = recipient
+                            }
+                            )
+                        );
+
+                        await _bot.SendMessage(
+                            user.Id,
+                            $"Получатель: {recipient.ToString()}{Environment.NewLine}Введите сумму:",
+                            replyMarkup: Menus.CancelMenu
+                        );
+                        return;
+                    }
+
+                    await _cache.SetAsync(
+                        user.Id.ToString(),
+                        FlowEnvelopeHelper.Wrap(
+                            transferFlow with
+                            {
+                                Step = "recipient-select",
+                                Customers = customersResult.Customers
+                            }
+                            )
+                        );
+                    await _bot.SendMessage(
+                        user.Id,
+                        $"Выберите получателя:",
+                        replyMarkup: Menus.ChooseCustomerMenu(customersResult.Customers)
+                    );
+                    return;
+
+                case TransferFlow transferFlow when transferFlow.Step == "amount-enter":
+                    
+                    if (!decimal.TryParse(text.Trim(), out decimal amount) || amount <= 0)
+                    {
+                        await _bot.SendMessage(
+                            user.Id,
+                            "Введите корректную сумму перевода:",
+                            replyMarkup: Menus.CancelMenu
+                        );
+                        return;
+                    }
+
+                    if (transferFlow.Recipient is null)
+                    {
+                        await _bot.SendMessage(
+                            user.Id,
+                            "Получатель не выбран. Пожалуйста, начните заново.",
+                            replyMarkup: Menus.MainMenu
+                        );
+                        await _cache.RemoveAsync(user.Id.ToString());
+                        return;
+                    }
+
+                    var senderResult = await _apiClient.GetCustomerByIdAsync(user.Id);
+                    var senderBalance = senderResult?.Customer?.Balance ?? 0m;
+                    if (senderBalance < amount)
+                    {
+                        await _bot.SendMessage(
+                            user.Id,
+                            $"Недостаточно средств. Ваш текущий баланс: {senderBalance:N2}. Введите другую сумму:",
+                            replyMarkup: Menus.CancelMenu
+                        );
+                        return;
+                    }
+
+                    await _cache.SetAsync(
+                        user.Id.ToString(),
+                        FlowEnvelopeHelper.Wrap(
+                            transferFlow with
+                            {
+                                Step = "description-enter",
+                                Amount = amount
+                            }
+                            )
+                        );
+                    await _bot.SendMessage(
+                        user.Id,
+                        $"Получатель: {transferFlow.Recipient!.ToString()}{Environment.NewLine}Сумма:{amount:N2}{Environment.NewLine}Введите назначение платежа:",
+                        replyMarkup: Menus.ConfirmMenu
+                    );
+                    return;
+
+                case TransferFlow transferFlow when transferFlow.Step == "description-enter":
+                    var description = text.Trim();
+
+                    if (string.IsNullOrEmpty(description))
+                    {
+                        await _bot.SendMessage(
+                            user.Id,
+                            "Описание не может быть пустым. Пожалуйста, введите корректное описание:",
+                            replyMarkup: Menus.ConfirmMenu
+                        );
+                        return;
+                    }
+
+                    if (transferFlow.Recipient is null || transferFlow.Amount is null)
+                    {
+                        await _bot.SendMessage(
+                            user.Id,
+                            "Ошибка во время перевода. Пожалуйста, начните заново.",
+                            replyMarkup: Menus.MainMenu
+                        );
+                        await _cache.RemoveAsync(user.Id.ToString());
+                        return;
+                    }
+
+                    await _cache.SetAsync(
+                        user.Id.ToString(),
+                        FlowEnvelopeHelper.Wrap(
+                            transferFlow with
+                            {
+                                Step = "confirm",
+                                Description = description
+                            }
+                            )
+                        );
+
+                    await _bot.SendMessage(
+                        user.Id,
+                        $"Пожалуйста, подтвердите перевод:{Environment.NewLine}" +
+                        $"Получатель: {transferFlow.Recipient.ToString()}{Environment.NewLine}" +
+                        $"Сумма: {transferFlow.Amount:N2}{Environment.NewLine}" +
+                        $"Описание: {description}",
+                        replyMarkup: Menus.ConfirmMenu
+                    );
+
+                    return;
+
                 default:
                     // Unknown flow state, remove from cache
                     await _cache.RemoveAsync(user.Id.ToString());
@@ -184,9 +348,27 @@ internal class GringottsWorker : BackgroundService
             return;
         }
 
+        if (text == Buttons.Transfer || text == Commands.Transfer)
+        {
+            await _cache.SetAsync(
+                user.Id.ToString(),
+                FlowEnvelopeHelper.Wrap(
+                    new TransferFlow("recipient-search")
+                    )
+                );
+
+            await _bot.SendMessage(
+                user.Id,
+                "Поиск получателя (пользователь Telegram, имя игрока или персонажа):",
+                replyMarkup: Menus.CancelMenu
+            );
+            return;
+        }
+
         if (text == Buttons.Cancel || text == Commands.Cancel)
         {
-            await _cache.RemoveAsync(user.Id.ToString());
+            await CancelOperation(user.Id);
+            return;
         }
 
         await SendMenu(user.Id);
@@ -201,12 +383,7 @@ internal class GringottsWorker : BackgroundService
 
         if (query.Data == "cancel")
         {
-            await _cache.RemoveAsync(user.Id.ToString());
-            await _bot.SendMessage(
-                user.Id,
-                "Действие отменено.",
-                replyMarkup: Menus.MainMenu
-            );
+            await CancelOperation(user.Id);
             return;
         }
 
@@ -233,6 +410,87 @@ internal class GringottsWorker : BackgroundService
                         return;
                     }
                     break;
+                case TransferFlow transferFlow when transferFlow.Step == "recipient-select":
+                    if (long.TryParse(query.Data, out long customerId))
+                    {
+                        var recipient = transferFlow.Customers!.FirstOrDefault(c => c.Id == customerId);
+                        if (recipient is not null)
+                        {
+                            await _cache.SetAsync(
+                                user.Id.ToString(),
+                                FlowEnvelopeHelper.Wrap(
+                                    transferFlow with
+                                    {
+                                        Step = "amount-enter",
+                                        Recipient = recipient
+                                    }
+                                    )
+                                );
+                            await _bot.SendMessage(
+                                user.Id,
+                                $"Получатель: {recipient.ToString()}{Environment.NewLine}Введите сумму:",
+                                replyMarkup: Menus.CancelMenu
+                            );
+                            return;
+                        }
+                    }
+                    break;
+                case TransferFlow transferFlow when transferFlow.Step == "confirm":
+                    if (query.Data == "confirm")
+                    {
+                        if (transferFlow.Recipient is null || transferFlow.Amount is null || transferFlow.Description is null)
+                        {
+                            await _bot.SendMessage(
+                                user.Id,
+                                "Ошибка во время перевода. Пожалуйста, начните заново.",
+                                replyMarkup: Menus.MainMenu
+                            );
+                            await _cache.RemoveAsync(user.Id.ToString());
+                            return;
+                        }
+
+                        var transactionRequest = new TransactionRequest
+                        {
+                            SenderId = user.Id,
+                            RecipientId = transferFlow.Recipient.Id,
+                            Amount = transferFlow.Amount.Value,
+                            Description = transferFlow.Description
+                        };
+
+                        var transferResult = await _apiClient.CreateTransactionAsync(transactionRequest);
+                        if (transferResult!.Success)
+                        {
+                            await _bot.SendMessage(
+                                user.Id,
+                                $"Перевод успешно выполнен.{Environment.NewLine}" +
+                                $"Получатель: {transferFlow.Recipient.ToString()}{Environment.NewLine}" +
+                                $"Сумма: {transferFlow.Amount:N2}{Environment.NewLine}" +
+                                $"Описание: {transferFlow.Description}",
+                                replyMarkup: Menus.MainMenu
+                            );
+
+                            await _bot.SendMessage(
+                                transferFlow.Recipient.Id,
+                                $"Вам поступил перевод.{Environment.NewLine}" +
+                                $"Отправитель: {user.FirstName}{Environment.NewLine}" +
+                                $"Сумма: {transferFlow.Amount:N2}{Environment.NewLine}" +
+                                $"Описание: {transferFlow.Description}",
+                                replyMarkup: Menus.MainMenu
+                            );
+                        }
+                        else
+                        {
+                            await _bot.SendMessage(
+                                user.Id,
+                                $"Ошибка при выполнении перевода: {transferResult.ErrorMessage}",
+                                replyMarkup: Menus.MainMenu
+                            );
+                        }
+                        await _cache.RemoveAsync(user.Id.ToString());
+                        return;
+                    }
+                    break;
+
                 default:
                     // Unknown flow state, remove from cache
                     await _cache.RemoveAsync(user.Id.ToString());
@@ -252,5 +510,14 @@ internal class GringottsWorker : BackgroundService
         );
     }
 
-    
+    async Task CancelOperation(long userId)
+    {
+        await _cache.RemoveAsync(userId.ToString());
+        await _bot.SendMessage(
+            userId,
+            "Действие отменено.",
+            replyMarkup: Menus.MainMenu
+        );
+    }
+
 }

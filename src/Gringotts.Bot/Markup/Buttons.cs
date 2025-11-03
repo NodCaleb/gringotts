@@ -9,7 +9,7 @@ namespace Gringotts.Bot.Markup;
 internal static class Buttons
 {
     public static readonly string Balance = "🏦 Баланс";
-    public static readonly string NewPayment = "💸 Платёж";
+    public static readonly string Transfer = "💸 Платёж";
     public static readonly string TransactionsHistory = "🧾 История";
     public static readonly string CharacterName = "🧙 Имя персонажа";
     public static readonly string Confirm = "✅ Подтвердить";
