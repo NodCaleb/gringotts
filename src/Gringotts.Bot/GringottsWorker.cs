@@ -212,13 +212,11 @@ internal class GringottsWorker : BackgroundService
                         return;
                     }
 
-                    var senderResult = await _apiClient.GetCustomerByIdAsync(user.Id);
-                    var senderBalance = senderResult?.Customer?.Balance ?? 0m;
-                    if (senderBalance < amount)
+                    if (transferFlow.Sender.Balance < amount)
                     {
                         await _bot.SendMessage(
                             user.Id,
-                            $"Недостаточно средств. Ваш текущий баланс: {senderBalance:N2}. Введите другую сумму:",
+                            $"Недостаточно средств. Ваш текущий баланс: {transferFlow.Sender.Balance:N2}. Введите другую сумму:",
                             replyMarkup: Menus.CancelMenu
                         );
                         return;
@@ -297,35 +295,33 @@ internal class GringottsWorker : BackgroundService
         // Handle buttons and commands accordingly
         if (text == Commands.Start)
         {
-            var username = "@" + user.Username;
-            var fullName = user.FirstName + (string.IsNullOrEmpty(user.LastName) ? "" : " " + user.LastName);
-            var userId = user.Id;
-
-            var customer = new Customer
-            {
-                Id = userId,
-                UserName = username,
-                PersonalName = fullName
-            };
-
-            await _apiClient.CreateCustomerAsync(customer);
+            var customer = await CreateOrUpdateCustomer(user);
 
             await _bot.SendMessage(
                 user.Id,
-                "Привет!" + Environment.NewLine +
-                fullName + Environment.NewLine,
-                replyMarkup: Menus.MainMenu
+                "Банк Гринготтс привествует вас!" + Environment.NewLine +
+                customer.PersonalName + Environment.NewLine +
+                "Введите имя персонажа:",
+                replyMarkup: Menus.CancelMenu
             );
+
+            await _cache.SetAsync(
+                user.Id.ToString(),
+                FlowEnvelopeHelper.Wrap(
+                    new SetNameFlow()
+                    )
+                );
 
             return;
         }
 
         if (text == Buttons.Balance || text == Commands.Balance)
         {
-            var customerResult = await _apiClient.GetCustomerByIdAsync(user.Id);
+            var customer = await CreateOrUpdateCustomer(user);
+
             await _bot.SendMessage(
                 user.Id,
-                $"Ваш текущий баланс: {customerResult!.Customer!.Balance:N2}",
+                $"Ваш текущий баланс: {customer.Balance:N2}",
                 replyMarkup: Menus.MainMenu
             );
             return;
@@ -350,10 +346,12 @@ internal class GringottsWorker : BackgroundService
 
         if (text == Buttons.Transfer || text == Commands.Transfer)
         {
+            var sender = await CreateOrUpdateCustomer(user);
+
             await _cache.SetAsync(
                 user.Id.ToString(),
                 FlowEnvelopeHelper.Wrap(
-                    new TransferFlow("recipient-search")
+                    new TransferFlow("recipient-search", sender)
                     )
                 );
 
@@ -460,8 +458,6 @@ internal class GringottsWorker : BackgroundService
                         var transferResult = await _apiClient.CreateTransactionAsync(transactionRequest);
                         if (transferResult!.Success)
                         {
-                            var senderInfo = await _apiClient.GetCustomerByIdAsync(user.Id);
-
                             await _bot.SendMessage(
                                 user.Id,
                                 $"Перевод успешно выполнен.{Environment.NewLine}" +
@@ -474,7 +470,7 @@ internal class GringottsWorker : BackgroundService
                             await _bot.SendMessage(
                                 transferFlow.Recipient.Id,
                                 $"Вам поступил перевод.{Environment.NewLine}" +
-                                $"Отправитель: {senderInfo.Customer?.ToString() ?? user.FirstName}{Environment.NewLine}" +
+                                $"Отправитель: {transferFlow.Sender.ToString()}{Environment.NewLine}" +
                                 $"Сумма: {transferFlow.Amount:N2}{Environment.NewLine}" +
                                 $"Описание: {transferFlow.Description}",
                                 replyMarkup: Menus.MainMenu
@@ -520,6 +516,24 @@ internal class GringottsWorker : BackgroundService
             "Действие отменено.",
             replyMarkup: Menus.MainMenu
         );
+    }
+
+    async Task<Customer> CreateOrUpdateCustomer(User user)
+    {
+        var username = "@" + user.Username;
+        var fullName = user.FirstName + (string.IsNullOrEmpty(user.LastName) ? "" : " " + user.LastName);
+        var userId = user.Id;
+
+        var customer = new Customer
+        {
+            Id = userId,
+            UserName = username,
+            PersonalName = fullName
+        };
+
+        var response = await _apiClient.CreateCustomerAsync(customer);
+
+        return response!.Customer!;
     }
 
 }

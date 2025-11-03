@@ -4,6 +4,7 @@ namespace Gringotts.Bot.Flows;
 
 public sealed record TransferFlow(
     string Step,                 // e.g. "PickRecipient" | "EnterAmount" | "Confirm"
+    Customer Sender,
     Customer? Recipient = null,
     IEnumerable<Customer>? Customers = null,
     decimal? Amount = null,
