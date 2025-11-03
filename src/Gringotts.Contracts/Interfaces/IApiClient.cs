@@ -17,4 +17,8 @@ public interface IApiClient
     Task<TransactionResult> CreateTransactionAsync(TransactionRequest request, CancellationToken cancellationToken = default);
 
     Task<CustomersListResult> SearchCustomersAsync(string? search, int? pageNumber = null, int? pageSize = null, CancellationToken cancellationToken = default);
+
+    Task<TransactionsListResult> GetTransactionsAsync(int? pageNumber = null, int? pageSize = null, CancellationToken cancellationToken = default);
+
+    Task<TransactionsListResult> GetTransactionsByCustomerAsync(long customerId, int? pageNumber = null, int? pageSize = null, CancellationToken cancellationToken = default);
 }

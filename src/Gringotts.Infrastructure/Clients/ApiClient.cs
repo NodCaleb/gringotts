@@ -220,4 +220,44 @@ public class ApiClient : IApiClient
             ErrorMessage = error?.Errors ?? new List<string>()
         };
     }
+
+    // New: GET /transactions
+    public async Task<TransactionsListResult> GetTransactionsAsync(int? pageNumber = null, int? pageSize = null, CancellationToken cancellationToken = default)
+    {
+        var client = _factory.CreateClient("GringottsApiClient");
+        var queryParams = new List<string>();
+        if (pageNumber.HasValue) queryParams.Add($"pageNumber={pageNumber.Value}");
+        if (pageSize.HasValue) queryParams.Add($"pageSize={pageSize.Value}");
+        var url = "/transactions" + (queryParams.Count > 0 ? "?" + string.Join("&", queryParams) : string.Empty);
+
+        var resp = await client.GetAsync(url, cancellationToken).ConfigureAwait(false);
+        if (resp.IsSuccessStatusCode)
+        {
+            var listResp = await resp.Content.ReadFromJsonAsync<TransactionsListResponse>(_jsonOptions, cancellationToken).ConfigureAwait(false);
+            return new TransactionsListResult { Success = true, ErrorCode = ErrorCode.None, Transactions = listResp?.Transactions ?? new List<Contracts.DTO.TransactionInfo>() };
+        }
+
+        var error = await resp.Content.ReadFromJsonAsync<BaseResponse>(_jsonOptions, cancellationToken).ConfigureAwait(false);
+        return new TransactionsListResult { Success = false, ErrorCode = error?.ErrorCode ?? ErrorCode.InternalError, ErrorMessage = error?.Errors ?? new List<string>() };
+    }
+
+    // New: GET /customers/{id}/transactions
+    public async Task<TransactionsListResult> GetTransactionsByCustomerAsync(long customerId, int? pageNumber = null, int? pageSize = null, CancellationToken cancellationToken = default)
+    {
+        var client = _factory.CreateClient("GringottsApiClient");
+        var queryParams = new List<string>();
+        if (pageNumber.HasValue) queryParams.Add($"pageNumber={pageNumber.Value}");
+        if (pageSize.HasValue) queryParams.Add($"pageSize={pageSize.Value}");
+        var url = "/customers/" + customerId + "/transactions" + (queryParams.Count > 0 ? "?" + string.Join("&", queryParams) : string.Empty);
+
+        var resp = await client.GetAsync(url, cancellationToken).ConfigureAwait(false);
+        if (resp.IsSuccessStatusCode)
+        {
+            var listResp = await resp.Content.ReadFromJsonAsync<TransactionsListResponse>(_jsonOptions, cancellationToken).ConfigureAwait(false);
+            return new TransactionsListResult { Success = true, ErrorCode = ErrorCode.None, Transactions = listResp?.Transactions ?? new List<Contracts.DTO.TransactionInfo>() };
+        }
+
+        var error = await resp.Content.ReadFromJsonAsync<BaseResponse>(_jsonOptions, cancellationToken).ConfigureAwait(false);
+        return new TransactionsListResult { Success = false, ErrorCode = error?.ErrorCode ?? ErrorCode.InternalError, ErrorMessage = error?.Errors ?? new List<string>() };
+    }
 }

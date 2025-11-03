@@ -196,6 +196,35 @@ internal class GringottsWorker : BackgroundService
             return;
         }
 
+        if (text == Buttons.TransactionsHistory || text == Commands.TransactionsHistory)
+        {
+            var customer = await CreateOrUpdateCustomer(user);
+            var transactionsResult = await _apiClient.GetTransactionsByCustomerAsync(customer.Id);
+            if (transactionsResult!.Transactions!.Count == 0)
+            {
+                await _bot.SendMessage(
+                    user.Id,
+                    "У вас нет транзакций.",
+                    replyMarkup: Menus.MainMenu
+                );
+                return;
+            }
+            var transactionsText = "История транзакций:" + Environment.NewLine;
+            foreach (var tx in transactionsResult.Transactions)
+            {
+                transactionsText +=
+                    $"{(tx.SenderId == customer.Id ? "Отправлено" : "Получено")}: {tx.Amount:N2} | " +
+                    $"Описание: {tx.Description} | " +
+                    $"Дата: {tx.Date:G}{Environment.NewLine}";
+            }
+            await _bot.SendMessage(
+                user.Id,
+                $"История транзакций:{Environment.NewLine}{Environment.NewLine}{string.Join(Environment.NewLine, transactionsResult.Transactions.Select(t => t.FormatForCustomer(user.Id)))}",
+                replyMarkup: Menus.MainMenu
+            );
+            return;
+        }
+
         await SendMenu(user.Id);
     }
 
@@ -311,7 +340,8 @@ internal class GringottsWorker : BackgroundService
             }
 
             var customersResult = await _apiClient.SearchCustomersAsync(searchQuery);
-            if (customersResult!.Customers!.Count == 0)
+            var recipients = customersResult?.Customers?.Where(c => c.Id != user.Id).ToList() ?? Enumerable.Empty<Customer>().ToList();
+            if (recipients.Count == 0)
             {
                 await _bot.SendMessage(
                     user.Id,
@@ -321,9 +351,9 @@ internal class GringottsWorker : BackgroundService
                 return true;
             }
 
-            if (customersResult!.Customers!.Count == 1)
+            if (recipients.Count == 1)
             {
-                var recipient = customersResult.Customers.Single();
+                var recipient = recipients.Single();
 
                 await _cache.SetAsync(
                     user.Id.ToString(),
@@ -350,14 +380,14 @@ internal class GringottsWorker : BackgroundService
                     transferFlow with
                     {
                         Step = "recipient-select",
-                        Customers = customersResult.Customers
+                        Customers = recipients
                     }
                 )
             );
             await _bot.SendMessage(
                 user.Id,
                 $"Выберите получателя:",
-                replyMarkup: Menus.ChooseCustomerMenu(customersResult.Customers)
+                replyMarkup: Menus.ChooseCustomerMenu(recipients)
             );
             return true;
         }
