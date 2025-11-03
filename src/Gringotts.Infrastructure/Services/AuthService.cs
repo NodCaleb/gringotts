@@ -1,4 +1,5 @@
-﻿using Gringotts.Infrastructure.Interfaces;
+﻿using System.Linq;
+using Gringotts.Infrastructure.Interfaces;
 using Gringotts.Domain.Entities;
 using Gringotts.Shared.Enums;
 using Gringotts.Contracts.Results;
@@ -76,5 +77,25 @@ internal class AuthService : IAuthService
         result.Success = true;
         result.ErrorCode = ErrorCode.None;
         return result;
+    }
+
+    public async Task<IReadOnlyList<string>> GetEmployeeNamesAsync()
+    {
+        using var uow = _unitOfWorkFactory.Create();
+        try
+        {
+            var employees = await _employeeRepository.GetAllAsync(uow.Connection, uow.Transaction);
+            await uow.CommitAsync();
+            if (employees == null)
+                return Array.Empty<string>();
+
+            // Filter out access codes by projecting only usernames
+            return employees.Select(e => e.UserName).ToList();
+        }
+        catch
+        {
+            await uow.RollbackAsync();
+            return Array.Empty<string>();
+        }
     }
 }

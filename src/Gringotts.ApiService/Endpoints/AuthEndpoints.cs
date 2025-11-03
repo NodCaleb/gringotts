@@ -38,5 +38,12 @@ public static class AuthEndpoints
                 _ => Results.Problem(detail: result.ErrorMessage.FirstOrDefault() ?? "An error occurred.")
             };
         }).WithName("CheckAccessCode");
+
+        app.MapGet("/employees", async (IAuthService authService) =>
+        {
+            var names = await authService.GetEmployeeNamesAsync();
+            var resp = new EmployeesListResponse { ErrorCode = ErrorCode.None, EmployeeNames = names.ToList() };
+            return Results.Ok(resp);
+        }).WithName("GetEmployees");
     }
 }
