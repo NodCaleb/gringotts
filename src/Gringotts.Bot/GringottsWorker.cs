@@ -91,204 +91,33 @@ internal class GringottsWorker : BackgroundService
         // Print to console
         Console.WriteLine($"{user.FirstName} wrote {text}");
 
+        if (text == Buttons.Cancel || text == Commands.Cancel)
+        {
+            await CancelOperation(user.Id);
+            return;
+        }
+
         var flowEnvelope = await _cache.GetAsync<FlowEnvelope>(user.Id.ToString());
 
         if (flowEnvelope is not null)
         {
             var flowState = FlowEnvelopeHelper.Unwrap(flowEnvelope);
-            switch (flowState)
+
+            // Delegate flow-specific processing
+            if (flowState is SetNameFlow setNameFlow)
             {
-                case SetNameFlow setNameFlow:
-                    var characterName = text.Trim();
-                    if (string.IsNullOrEmpty(characterName))
-                    {
-                        await _bot.SendMessage(
-                            user.Id,
-                            "Имя персонажа не может быть пустым. Пожалуйста, введите корректное имя:",
-                            replyMarkup: Menus.CancelMenu
-                        );
-                        return;
-                    }
-
-                    await _cache.SetAsync(
-                        user.Id.ToString(),
-                        FlowEnvelopeHelper.Wrap(
-                            new SetNameFlow(characterName)
-                            )
-                        );
-
-                    await _bot.SendMessage(
-                        user.Id,
-                        $"Введено имя персонажа: {characterName}",
-                        replyMarkup: Menus.ConfirmMenu
-                    );
-                    return;
-
-                case TransferFlow transferFlow when transferFlow.Step == "recipient-search":
-
-                    var searchQuery = text.Trim();
-
-                    if (string.IsNullOrEmpty(searchQuery) || searchQuery.Length < 3)
-                    {
-                        await _bot.SendMessage(
-                            user.Id,
-                            "Введите хотя бы 3 символа, жалко вам что-ли:",
-                            replyMarkup: Menus.CancelMenu
-                        );
-                        return;
-                    }
-
-                    var customersResult = await _apiClient.SearchCustomersAsync(searchQuery);
-                    if (customersResult!.Customers!.Count == 0)
-                    {
-                        await _bot.SendMessage(
-                            user.Id,
-                            "Получатели не найдены. Введите другой запрос для поиска:",
-                            replyMarkup: Menus.CancelMenu
-                        );
-                        return;
-                    }
-
-                    if (customersResult!.Customers!.Count == 1)
-                    {
-                        var recipient = customersResult.Customers.Single();
-
-                        await _cache.SetAsync(
-                        user.Id.ToString(),
-                        FlowEnvelopeHelper.Wrap(
-                            transferFlow with
-                            {
-                                Step = "amount-enter",
-                                Recipient = recipient
-                            }
-                            )
-                        );
-
-                        await _bot.SendMessage(
-                            user.Id,
-                            $"Получатель: {recipient.ToString()}{Environment.NewLine}Введите сумму:",
-                            replyMarkup: Menus.CancelMenu
-                        );
-                        return;
-                    }
-
-                    await _cache.SetAsync(
-                        user.Id.ToString(),
-                        FlowEnvelopeHelper.Wrap(
-                            transferFlow with
-                            {
-                                Step = "recipient-select",
-                                Customers = customersResult.Customers
-                            }
-                            )
-                        );
-                    await _bot.SendMessage(
-                        user.Id,
-                        $"Выберите получателя:",
-                        replyMarkup: Menus.ChooseCustomerMenu(customersResult.Customers)
-                    );
-                    return;
-
-                case TransferFlow transferFlow when transferFlow.Step == "amount-enter":
-                    
-                    if (!decimal.TryParse(text.Trim(), out decimal amount) || amount <= 0)
-                    {
-                        await _bot.SendMessage(
-                            user.Id,
-                            "Введите корректную сумму перевода:",
-                            replyMarkup: Menus.CancelMenu
-                        );
-                        return;
-                    }
-
-                    if (transferFlow.Recipient is null)
-                    {
-                        await _bot.SendMessage(
-                            user.Id,
-                            "Получатель не выбран. Пожалуйста, начните заново.",
-                            replyMarkup: Menus.MainMenu
-                        );
-                        await _cache.RemoveAsync(user.Id.ToString());
-                        return;
-                    }
-
-                    if (transferFlow.Sender.Balance < amount)
-                    {
-                        await _bot.SendMessage(
-                            user.Id,
-                            $"Недостаточно средств. Ваш текущий баланс: {transferFlow.Sender.Balance:N2}. Введите другую сумму:",
-                            replyMarkup: Menus.CancelMenu
-                        );
-                        return;
-                    }
-
-                    await _cache.SetAsync(
-                        user.Id.ToString(),
-                        FlowEnvelopeHelper.Wrap(
-                            transferFlow with
-                            {
-                                Step = "description-enter",
-                                Amount = amount
-                            }
-                            )
-                        );
-                    await _bot.SendMessage(
-                        user.Id,
-                        $"Получатель: {transferFlow.Recipient!.ToString()}{Environment.NewLine}Сумма:{amount:N2}{Environment.NewLine}Введите назначение платежа:",
-                        replyMarkup: Menus.ConfirmMenu
-                    );
-                    return;
-
-                case TransferFlow transferFlow when transferFlow.Step == "description-enter":
-                    var description = text.Trim();
-
-                    if (string.IsNullOrEmpty(description))
-                    {
-                        await _bot.SendMessage(
-                            user.Id,
-                            "Описание не может быть пустым. Пожалуйста, введите корректное описание:",
-                            replyMarkup: Menus.ConfirmMenu
-                        );
-                        return;
-                    }
-
-                    if (transferFlow.Recipient is null || transferFlow.Amount is null)
-                    {
-                        await _bot.SendMessage(
-                            user.Id,
-                            "Ошибка во время перевода. Пожалуйста, начните заново.",
-                            replyMarkup: Menus.MainMenu
-                        );
-                        await _cache.RemoveAsync(user.Id.ToString());
-                        return;
-                    }
-
-                    await _cache.SetAsync(
-                        user.Id.ToString(),
-                        FlowEnvelopeHelper.Wrap(
-                            transferFlow with
-                            {
-                                Step = "confirm",
-                                Description = description
-                            }
-                            )
-                        );
-
-                    await _bot.SendMessage(
-                        user.Id,
-                        $"Пожалуйста, подтвердите перевод:{Environment.NewLine}" +
-                        $"Получатель: {transferFlow.Recipient.ToString()}{Environment.NewLine}" +
-                        $"Сумма: {transferFlow.Amount:N2}{Environment.NewLine}" +
-                        $"Описание: {description}",
-                        replyMarkup: Menus.ConfirmMenu
-                    );
-
-                    return;
-
-                default:
-                    // Unknown flow state, remove from cache
-                    await _cache.RemoveAsync(user.Id.ToString());
-                    break;
+                var handled = await ProcessSetNameFlow(user, setNameFlow, text);
+                if (handled) return;
+            }
+            else if (flowState is TransferFlow transferFlow)
+            {
+                var handled = await ProcessTransferFlow(user, transferFlow, text);
+                if (handled) return;
+            }
+            else
+            {
+                // Unknown flow state, remove from cache
+                await _cache.RemoveAsync(user.Id.ToString());
             }
         }
 
@@ -329,6 +158,8 @@ internal class GringottsWorker : BackgroundService
 
         if (text == Buttons.CharacterName || text == Commands.CharacterName)
         {
+            var customer = await CreateOrUpdateCustomer(user);
+
             await _cache.SetAsync(
                 user.Id.ToString(),
                 FlowEnvelopeHelper.Wrap(
@@ -338,7 +169,9 @@ internal class GringottsWorker : BackgroundService
 
             await _bot.SendMessage(
                 user.Id,
-                "Введите имя персонажа:",
+                string.IsNullOrEmpty(customer.CharacterName) ?
+                "Введите имя персонажа:" :
+                $"Текущее имя персонажа: {customer.CharacterName}{Environment.NewLine}Введите новое имя персонажа:",
                 replyMarkup: Menus.CancelMenu
             );
             return;
@@ -363,12 +196,6 @@ internal class GringottsWorker : BackgroundService
             return;
         }
 
-        if (text == Buttons.Cancel || text == Commands.Cancel)
-        {
-            await CancelOperation(user.Id);
-            return;
-        }
-
         await SendMenu(user.Id);
     }
 
@@ -390,113 +217,332 @@ internal class GringottsWorker : BackgroundService
         if (flowEnvelope is not null)
         {
             var flowState = FlowEnvelopeHelper.Unwrap(flowEnvelope);
-            switch (flowState)
+
+            // Delegate flow-specific processing for callbacks
+            if (flowState is SetNameFlow setNameFlow)
             {
-                case SetNameFlow setNameFlow:
-                    if (query.Data == "confirm")
-                    {
-                        var characterName = setNameFlow.Name;
-
-                        await _apiClient.UpdateCharacterNameAsync(user.Id, characterName!);
-
-                        await _bot.SendMessage(
-                            user.Id,
-                            $"Имя персонажа '{characterName}' сохранено.",
-                            replyMarkup: Menus.MainMenu
-                        );
-                        await _cache.RemoveAsync(user.Id.ToString());
-                        return;
-                    }
-                    break;
-                case TransferFlow transferFlow when transferFlow.Step == "recipient-select":
-                    if (long.TryParse(query.Data, out long customerId))
-                    {
-                        var recipient = transferFlow.Customers!.FirstOrDefault(c => c.Id == customerId);
-                        if (recipient is not null)
-                        {
-                            await _cache.SetAsync(
-                                user.Id.ToString(),
-                                FlowEnvelopeHelper.Wrap(
-                                    transferFlow with
-                                    {
-                                        Step = "amount-enter",
-                                        Recipient = recipient
-                                    }
-                                    )
-                                );
-                            await _bot.SendMessage(
-                                user.Id,
-                                $"Получатель: {recipient.ToString()}{Environment.NewLine}Введите сумму:",
-                                replyMarkup: Menus.CancelMenu
-                            );
-                            return;
-                        }
-                    }
-                    break;
-                case TransferFlow transferFlow when transferFlow.Step == "confirm":
-                    if (query.Data == "confirm")
-                    {
-                        if (transferFlow.Recipient is null || transferFlow.Amount is null || transferFlow.Description is null)
-                        {
-                            await _bot.SendMessage(
-                                user.Id,
-                                "Ошибка во время перевода. Пожалуйста, начните заново.",
-                                replyMarkup: Menus.MainMenu
-                            );
-                            await _cache.RemoveAsync(user.Id.ToString());
-                            return;
-                        }
-
-                        var transactionRequest = new TransactionRequest
-                        {
-                            SenderId = user.Id,
-                            RecipientId = transferFlow.Recipient.Id,
-                            Amount = transferFlow.Amount.Value,
-                            Description = transferFlow.Description
-                        };
-
-                        var transferResult = await _apiClient.CreateTransactionAsync(transactionRequest);
-                        if (transferResult!.Success)
-                        {
-                            await _bot.SendMessage(
-                                user.Id,
-                                $"Перевод успешно выполнен.{Environment.NewLine}" +
-                                $"Получатель: {transferFlow.Recipient.ToString()}{Environment.NewLine}" +
-                                $"Сумма: {transferFlow.Amount:N2}{Environment.NewLine}" +
-                                $"Описание: {transferFlow.Description}",
-                                replyMarkup: Menus.MainMenu
-                            );
-
-                            await _bot.SendMessage(
-                                transferFlow.Recipient.Id,
-                                $"Вам поступил перевод.{Environment.NewLine}" +
-                                $"Отправитель: {transferFlow.Sender.ToString()}{Environment.NewLine}" +
-                                $"Сумма: {transferFlow.Amount:N2}{Environment.NewLine}" +
-                                $"Описание: {transferFlow.Description}",
-                                replyMarkup: Menus.MainMenu
-                            );
-                        }
-                        else
-                        {
-                            await _bot.SendMessage(
-                                user.Id,
-                                $"Ошибка при выполнении перевода: {transferResult.ErrorMessage}",
-                                replyMarkup: Menus.MainMenu
-                            );
-                        }
-                        await _cache.RemoveAsync(user.Id.ToString());
-                        return;
-                    }
-                    break;
-
-                default:
-                    // Unknown flow state, remove from cache
-                    await _cache.RemoveAsync(user.Id.ToString());
-                    break;
+                var handled = await ProcessSetNameFlow(user, setNameFlow, query.Data);
+                if (handled) return;
+            }
+            else if (flowState is TransferFlow transferFlow)
+            {
+                var handled = await ProcessTransferFlow(user, transferFlow, query.Data);
+                if (handled) return;
+            }
+            else
+            {
+                // Unknown flow state, remove from cache
+                await _cache.RemoveAsync(user.Id.ToString());
             }
         }
 
         await SendMenu(user.Id);
+    }
+
+    // New: process SetNameFlow for both messages and callbacks using single input string
+    async Task<bool> ProcessSetNameFlow(User user, SetNameFlow setNameFlow, string? input = null)
+    {
+        if (input is null)
+            return false;
+
+        // If callback (e.g. "confirm")
+        if (input == "confirm")
+        {
+            var characterName = setNameFlow.Name;
+
+            await _apiClient.UpdateCharacterNameAsync(user.Id, characterName!);
+
+            await _bot.SendMessage(
+                user.Id,
+                $"Имя персонажа '{characterName}' сохранено.",
+                replyMarkup: Menus.MainMenu
+            );
+            await _cache.RemoveAsync(user.Id.ToString());
+            return true;
+        }
+
+        // Otherwise treat input as message text (character name)
+        var characterNameMsg = input.Trim();
+        if (string.IsNullOrEmpty(characterNameMsg))
+        {
+            await _bot.SendMessage(
+                user.Id,
+                "Имя персонажа не может быть пустым. Пожалуйста, введите корректное имя:",
+                replyMarkup: Menus.CancelMenu
+            );
+            return true;
+        }
+
+        await _cache.SetAsync(
+            user.Id.ToString(),
+            FlowEnvelopeHelper.Wrap(
+                new SetNameFlow(characterNameMsg)
+                )
+            );
+
+        await _bot.SendMessage(
+            user.Id,
+            $"Введено имя персонажа: {characterNameMsg}",
+            replyMarkup: Menus.ConfirmMenu
+        );
+
+        return true;
+    }
+
+    // New: process TransferFlow for both messages and callbacks using single input string
+    async Task<bool> ProcessTransferFlow(User user, TransferFlow transferFlow, string? input = null)
+    {
+        if (input is null)
+            return false;
+
+        // Steps that expect message text
+        if (transferFlow.Step == "recipient-search")
+        {
+            var searchQuery = input.Trim();
+
+            if (string.IsNullOrEmpty(searchQuery) || searchQuery.Length <3)
+            {
+                await _bot.SendMessage(
+                    user.Id,
+                    "Введите хотя бы 3 символа, жалко вам что-ли:",
+                    replyMarkup: Menus.CancelMenu
+                );
+                return true;
+            }
+
+            var customersResult = await _apiClient.SearchCustomersAsync(searchQuery);
+            if (customersResult!.Customers!.Count == 0)
+            {
+                await _bot.SendMessage(
+                    user.Id,
+                    "Получатели не найдены. Попробуйте другой запрос:",
+                    replyMarkup: Menus.CancelMenu
+                );
+                return true;
+            }
+
+            if (customersResult!.Customers!.Count == 1)
+            {
+                var recipient = customersResult.Customers.Single();
+
+                await _cache.SetAsync(
+                    user.Id.ToString(),
+                    FlowEnvelopeHelper.Wrap(
+                        transferFlow with
+                        {
+                            Step = "amount-enter",
+                            Recipient = recipient
+                        }
+                    )
+                );
+
+                await _bot.SendMessage(
+                    user.Id,
+                    $"Получатель: {recipient.ToString()}{Environment.NewLine}Введите сумму:",
+                    replyMarkup: Menus.CancelMenu
+                );
+                return true;
+            }
+
+            await _cache.SetAsync(
+                user.Id.ToString(),
+                FlowEnvelopeHelper.Wrap(
+                    transferFlow with
+                    {
+                        Step = "recipient-select",
+                        Customers = customersResult.Customers
+                    }
+                )
+            );
+            await _bot.SendMessage(
+                user.Id,
+                $"Выберите получателя:",
+                replyMarkup: Menus.ChooseCustomerMenu(customersResult.Customers)
+            );
+            return true;
+        }
+
+        if (transferFlow.Step == "amount-enter")
+        {
+            if (!decimal.TryParse(input.Trim(), out decimal amount) || amount <=0)
+            {
+                await _bot.SendMessage(
+                    user.Id,
+                    "Введите корректную сумму платёжа:",
+                    replyMarkup: Menus.CancelMenu
+                );
+                return true;
+            }
+
+            if (transferFlow.Recipient is null)
+            {
+                await _bot.SendMessage(
+                    user.Id,
+                    "Получатель не выбран. Пожалуйста, начните заново.",
+                    replyMarkup: Menus.MainMenu
+                );
+                await _cache.RemoveAsync(user.Id.ToString());
+                return true;
+            }
+
+            if (transferFlow.Sender.Balance < amount)
+            {
+                await _bot.SendMessage(
+                    user.Id,
+                    $"Недостаточно средств. Ваш текущий баланс: {transferFlow.Sender.Balance:N2}. Введите другую сумму:",
+                    replyMarkup: Menus.CancelMenu
+                );
+                return true;
+            }
+
+            await _cache.SetAsync(
+                user.Id.ToString(),
+                FlowEnvelopeHelper.Wrap(
+                    transferFlow with
+                    {
+                        Step = "description-enter",
+                        Amount = amount
+                    }
+                )
+            );
+            await _bot.SendMessage(
+                user.Id,
+                $"Получатель: {transferFlow.Recipient!.ToString()}{Environment.NewLine}Сумма:{amount:N2}{Environment.NewLine}Введите назначение платежа:",
+                replyMarkup: Menus.CancelMenu
+            );
+            return true;
+        }
+
+        if (transferFlow.Step == "description-enter")
+        {
+            var description = input.Trim();
+
+            if (string.IsNullOrEmpty(description))
+            {
+                await _bot.SendMessage(
+                    user.Id,
+                    "Описание не может быть пустым. Пожалуйста, введите корректное описание:",
+                    replyMarkup: Menus.ConfirmMenu
+                );
+                return true;
+            }
+
+            if (transferFlow.Recipient is null || transferFlow.Amount is null)
+            {
+                await _bot.SendMessage(
+                    user.Id,
+                    "Ошибка во время платёжа. Пожалуйста, начните заново.",
+                    replyMarkup: Menus.MainMenu
+                );
+                await _cache.RemoveAsync(user.Id.ToString());
+                return true;
+            }
+
+            await _cache.SetAsync(
+                user.Id.ToString(),
+                FlowEnvelopeHelper.Wrap(
+                    transferFlow with
+                    {
+                        Step = "confirm",
+                        Description = description
+                    }
+                )
+            );
+
+            await _bot.SendMessage(
+                user.Id,
+                $"Пожалуйста, подтвердите платёж:{Environment.NewLine}" +
+                $"Получатель: {transferFlow.Recipient.ToString()}{Environment.NewLine}" +
+                $"Сумма: {transferFlow.Amount:N2}{Environment.NewLine}" +
+                $"Описание: {description}",
+                replyMarkup: Menus.ConfirmMenu
+            );
+
+            return true;
+        }
+
+        // Steps that expect callback data
+        if (transferFlow.Step == "recipient-select")
+        {
+            if (long.TryParse(input, out long customerId))
+            {
+                var recipient = transferFlow.Customers!.FirstOrDefault(c => c.Id == customerId);
+                if (recipient is not null)
+                {
+                    await _cache.SetAsync(
+                        user.Id.ToString(),
+                        FlowEnvelopeHelper.Wrap(
+                            transferFlow with
+                            {
+                                Step = "amount-enter",
+                                Recipient = recipient
+                            }
+                        )
+                    );
+                    await _bot.SendMessage(
+                        user.Id,
+                        $"Получатель: {recipient.ToString()}{Environment.NewLine}Введите сумму:",
+                        replyMarkup: Menus.CancelMenu
+                    );
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        if (transferFlow.Step == "confirm" && input == "confirm")
+        {
+            if (transferFlow.Recipient is null || transferFlow.Amount is null || transferFlow.Description is null)
+            {
+                await _bot.SendMessage(
+                    user.Id,
+                    "Ошибка во время платёжа. Пожалуйста, начните заново.",
+                    replyMarkup: Menus.MainMenu
+                );
+                await _cache.RemoveAsync(user.Id.ToString());
+                return true;
+            }
+
+            var transactionRequest = new TransactionRequest
+            {
+                SenderId = user.Id,
+                RecipientId = transferFlow.Recipient.Id,
+                Amount = transferFlow.Amount.Value,
+                Description = transferFlow.Description
+            };
+
+            var transferResult = await _apiClient.CreateTransactionAsync(transactionRequest);
+            if (transferResult!.Success)
+            {
+                await _bot.SendMessage(
+                    user.Id,
+                    $"Платёж успешно выполнен.",
+                    replyMarkup: Menus.MainMenu
+                );
+
+                await _bot.SendMessage(
+                    transferFlow.Recipient.Id,
+                    $"Вам поступил платёж.{Environment.NewLine}" +
+                    $"Отправитель: {transferFlow.Sender.ToString()}{Environment.NewLine}" +
+                    $"Сумма: {transferFlow.Amount:N2}{Environment.NewLine}" +
+                    $"Описание: {transferFlow.Description}",
+                    replyMarkup: Menus.MainMenu
+                );
+            }
+            else
+            {
+                await _bot.SendMessage(
+                    user.Id,
+                    $"Ошибка при выполнении платёжа: {transferResult.ErrorMessage}",
+                    replyMarkup: Menus.MainMenu
+                );
+            }
+            await _cache.RemoveAsync(user.Id.ToString());
+            return true;
+        }
+
+        return false;
     }
 
     async Task SendMenu(long userId)
