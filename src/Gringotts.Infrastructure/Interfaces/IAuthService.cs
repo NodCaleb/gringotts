@@ -1,4 +1,4 @@
-﻿using Gringotts.Contracts.Responses;
+﻿using Gringotts.Contracts.DTO;
 using Gringotts.Contracts.Results;
 
 namespace Gringotts.Infrastructure.Interfaces;

@@ -3,6 +3,7 @@ using Gringotts.Domain.Entities;
 using Gringotts.Shared.Enums;
 using Gringotts.Contracts.Requests;
 using Gringotts.Contracts.Results;
+using Gringotts.Contracts.DTO;
 
 namespace Gringotts.Infrastructure.Services;
 
@@ -128,6 +129,23 @@ internal class TransactionsService : ITransactionsService
         {
             try { await uow.RollbackAsync(); } catch { }
             return new TransactionResult { Success = false, ErrorCode = ErrorCode.InternalError, ErrorMessage = { ex.Message } };
+        }
+    }
+
+    public async Task<TransactionsListResult> GetTransactionsByCustomerAsync(long customerId, int? pageNumber = null, int? pageSize = null)
+    {
+        using var uow = _unitOfWorkFactory.Create();
+        try
+        {
+            var list = await _transactionsRepository.GetByCustomerAsync(customerId, uow.Connection, uow.Transaction, pageNumber, pageSize);
+            await uow.CommitAsync();
+
+            return new TransactionsListResult { Success = true, Transactions = list?.ToList() ?? new List<TransactionInfo>() };
+        }
+        catch (Exception ex)
+        {
+            try { await uow.RollbackAsync(); } catch { }
+            return new TransactionsListResult { Success = false, ErrorCode = ErrorCode.InternalError, ErrorMessage = { ex.Message } };
         }
     }
 }

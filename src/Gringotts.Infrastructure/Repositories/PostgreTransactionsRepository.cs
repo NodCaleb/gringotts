@@ -2,6 +2,7 @@ using System.Data;
 using Dapper;
 using Gringotts.Domain.Entities;
 using Gringotts.Infrastructure.Interfaces;
+using Gringotts.Contracts.DTO;
 
 namespace Gringotts.Infrastructure.Repositories;
 
@@ -81,5 +82,43 @@ internal class PostgreTransactionsRepository : ITransactionsRepository
         var sql = $"DELETE FROM {TableName} WHERE id = @Id";
         var cmd = new CommandDefinition(sql, new { Id = id }, transaction: dbTransaction, cancellationToken: cancellationToken);
         await connection.ExecuteAsync(cmd);
+    }
+
+    public async Task<IReadOnlyList<TransactionInfo>> GetByCustomerAsync(long customerId, IDbConnection connection, IDbTransaction dbTransaction, int? pageNumber = null, int? pageSize = null, CancellationToken cancellationToken = default)
+    {
+        // Join customers (sender and recipient) and employees to produce TransactionInfo
+        var sql = $@"
+            SELECT t.id as Id,
+             t.date as Date,
+             t.amount as Amount,
+             t.description as Description,
+             t.senderid as SenderId,
+             COALESCE(s.charactername, s.personalname, s.username) as SenderName,
+             t.recipientid as RecipientId,
+             COALESCE(r.charactername, r.personalname, r.username) as RecipientName,
+             t.employeeid as EmployeeId,
+             e.username as EmployeeName
+            FROM {TableName} t
+            LEFT JOIN customers s ON s.id = t.senderid
+            INNER JOIN customers r ON r.id = t.recipientid
+            LEFT JOIN employees e ON e.id = t.employeeid
+            WHERE t.senderid = @CustomerId OR t.recipientid = @CustomerId
+            ORDER BY t.date DESC
+            ";
+
+        if (pageNumber.HasValue && pageSize.HasValue)
+        {
+            sql += " LIMIT @PageSize OFFSET @Offset";
+        }
+
+        var cmd = new CommandDefinition(sql, new
+        {
+            CustomerId = customerId,
+            PageSize = pageSize,
+            Offset = (pageNumber.HasValue && pageSize.HasValue) ? (pageNumber.Value - 1) * pageSize.Value : 0
+        }, transaction: dbTransaction, cancellationToken: cancellationToken);
+
+        var rows = await connection.QueryAsync<TransactionInfo>(cmd);
+        return rows.AsList();
     }
 }

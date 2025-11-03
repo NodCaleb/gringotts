@@ -6,4 +6,5 @@ namespace Gringotts.Infrastructure.Interfaces;
 public interface ITransactionsService
 {
     Task<TransactionResult> CreateTransactionAsync(TransactionRequest request);
+    Task<TransactionsListResult> GetTransactionsByCustomerAsync(long customerId, int? pageNumber = null, int? pageSize = null);
 }

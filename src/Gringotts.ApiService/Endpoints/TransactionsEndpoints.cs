@@ -2,6 +2,8 @@
 using Gringotts.Contracts.Responses;
 using Gringotts.Contracts.Requests;
 using Gringotts.Infrastructure.Interfaces;
+using Gringotts.Contracts.DTO;
+using Gringotts.Contracts.Results;
 
 namespace Gringotts.ApiService.Endpoints;
 
@@ -37,5 +39,18 @@ public static class TransactionsEndpoints
             };
 
         }).WithName("CreateTransaction");
+
+        app.MapGet("/customers/{id:long}/transactions", async (ITransactionsService transactionsService, long id, int? pageNumber, int? pageSize) =>
+        {
+            var result = await transactionsService.GetTransactionsByCustomerAsync(id, pageNumber, pageSize);
+            if (result.Success)
+            {
+                var resp = new TransactionsListResponse { ErrorCode = ErrorCode.None, Transactions = result.Transactions };
+                return Results.Ok(resp);
+            }
+
+            var err = new BaseResponse { ErrorCode = result.ErrorCode, Errors = result.ErrorMessage };
+            return Results.Problem(detail: result.ErrorMessage.FirstOrDefault() ?? "An error occurred.");
+        }).WithName("GetTransactionsByCustomer");
     }
 }

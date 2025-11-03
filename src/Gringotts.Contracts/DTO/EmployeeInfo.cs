@@ -1,6 +1,4 @@
-using System;
-
-namespace Gringotts.Contracts.Responses;
+namespace Gringotts.Contracts.DTO;
 
 public class EmployeeInfo
 {
