@@ -87,4 +87,25 @@ internal class PostgreCustomersRepository : ICustomersRepository
         var cmd = new CommandDefinition(sql, new { Username = userName }, transaction: transaction, cancellationToken: cancellationToken);
         return await connection.QuerySingleOrDefaultAsync<Customer>(cmd);
     }
+
+    public async Task<IReadOnlyList<Customer>> SearchCustomer(string substring, IDbConnection connection, IDbTransaction transaction, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(substring))
+        {
+            return Array.Empty<Customer>();
+        }
+
+        // Use ILIKE for case-insensitive search in PostgreSQL and surround with wildcards
+        var pattern = $"%{substring}%";
+        var sql = $@"SELECT *
+                    FROM {TableName}
+                    WHERE username ILIKE @Pattern
+                    OR personalname ILIKE @Pattern
+                    OR charactername ILIKE @Pattern
+                    ORDER BY id";
+
+        var cmd = new CommandDefinition(sql, new { Pattern = pattern }, transaction: transaction, cancellationToken: cancellationToken);
+        var result = await connection.QueryAsync<Customer>(cmd);
+        return result.AsList();
+    }
 }

@@ -11,4 +11,5 @@ public interface ICustomersRepository
     Task UpdateAsync(Customer customer, IDbConnection connection, IDbTransaction transaction, CancellationToken cancellationToken = default);
     Task DeleteAsync(long id, IDbConnection connection, IDbTransaction transaction, CancellationToken cancellationToken = default);
     Task<Customer?> GetByNameAsync(string userName, IDbConnection connection, IDbTransaction transaction, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<Customer>> SearchCustomer(string substring, IDbConnection connection, IDbTransaction transaction, CancellationToken cancellationToken = default);
 }

@@ -248,4 +248,39 @@ internal class CustomersService : ICustomersService
             };
         }
     }
+
+    public async Task<SearchCustomerResult> SearchCustomer(string substring)
+    {
+        using var uow = _unitOfWorkFactory.Create();
+        try
+        {
+            var customers = await _customersRepository.SearchCustomer(substring, uow.Connection, uow.Transaction);
+
+            return new SearchCustomerResult
+            {
+                Success = true,
+                Customers = customers?.ToList() ?? new List<Customer>()
+            };
+        }
+        catch (ArgumentException aex)
+        {
+            try { await uow.RollbackAsync(); } catch { }
+            return new SearchCustomerResult
+            {
+                Success = false,
+                ErrorCode = ErrorCode.ValidationError,
+                ErrorMessage = { aex.Message }
+            };
+        }
+        catch (Exception ex)
+        {
+            try { await uow.RollbackAsync(); } catch { }
+            return new SearchCustomerResult
+            {
+                Success = false,
+                ErrorCode = ErrorCode.InternalError,
+                ErrorMessage = { ex.Message }
+            };
+        }
+    }
 }
