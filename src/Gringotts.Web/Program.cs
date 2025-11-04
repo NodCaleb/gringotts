@@ -1,5 +1,6 @@
 using Gringotts.Web;
 using Gringotts.Web.Components;
+using Gringotts.Contracts.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,6 +19,13 @@ builder.Services.AddHttpClient<WeatherApiClient>(client =>
         // Learn more about service discovery scheme resolution at https://aka.ms/dotnet/sdschemes.
         client.BaseAddress = new("https+http://apiservice");
     });
+
+// Typed client for communicating with the Gringotts BFF under the `/bff` endpoints
+builder.Services.AddHttpClient<IApiClient, ApiClient>(client =>
+{
+    // This uses the same service discovery scheme pattern as other projects in the solution.
+    client.BaseAddress = new Uri("http+https://gringotts-bff");
+});
 
 var app = builder.Build();
 

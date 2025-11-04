@@ -1,0 +1,111 @@
+@page "/customers"
+@using Gringotts.Domain.Entities
+@using Gringotts.Shared.Enums
+@inject Gringotts.Contracts.Interfaces.IApiClient ApiClient
+
+<PageTitle>Customers</PageTitle>
+
+<h1>Customers</h1>
+
+<div class="mb-3 row">
+    <div class="col-auto">
+        <input class="form-control" @bind="searchText" placeholder="Search customers..." />
+    </div>
+    <div class="col-auto">
+        <button class="btn btn-primary" @onclick="OnSearch">Search</button>
+        <button class="btn btn-secondary ms-2" @onclick="OnClear">Clear</button>
+    </div>
+</div>
+
+@if (isLoading)
+{
+    <p><em>Loading...</em></p>
+}
+else if (!string.IsNullOrEmpty(error))
+{
+    <div class="alert alert-danger">@error</div>
+}
+else if (customers == null || customers.Count == 0)
+{
+    <p><em>No customers found.</em></p>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Character Name</th>
+                <th>Personal Name</th>
+                <th>Username</th>
+                <th class="text-end">Balance</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var c in customers)
+            {
+                <tr>
+                    <td>@c.CharacterName</td>
+                    <td>@c.PersonalName</td>
+                    <td>@c.UserName</td>
+                    <td class="text-end">@c.Balance.ToString("C")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<Customer>? customers;
+    private string? searchText;
+    private bool isLoading = false;
+    private string? error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadCustomersAsync();
+    }
+
+    private async Task OnSearch()
+    {
+        await LoadCustomersAsync();
+    }
+
+    private async Task OnClear()
+    {
+        searchText = null;
+        await LoadCustomersAsync();
+    }
+
+    private async Task LoadCustomersAsync()
+    {
+        isLoading = true;
+        error = null;
+        customers = null;
+
+        try
+        {
+            var result = await ApiClient.SearchCustomersAsync(searchText, pageNumber: null, pageSize: null);
+            if (result.Success)
+            {
+                // Sort by CharacterName then PersonalName as requested
+                customers = result.Customers
+                    .OrderBy(c => c.CharacterName)
+                    .ThenBy(c => c.PersonalName)
+                    .ToList();
+            }
+            else
+            {
+                error = result.ErrorMessage?.FirstOrDefault() ?? "An error occurred while fetching customers.";
+            }
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+}
