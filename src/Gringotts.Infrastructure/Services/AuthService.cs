@@ -18,9 +18,9 @@ internal class AuthService : IAuthService
         _unitOfWorkFactory = unitOfWorkFactory;
     }
 
-    public async Task<Result> CheckAccessCode(string userName, int accessCode)
+    public async Task<AuthResult> CheckAccessCode(string userName, int accessCode)
     {
-        var result = new Result();
+        var result = new AuthResult();
 
         if (string.IsNullOrWhiteSpace(userName))
         {
@@ -30,7 +30,7 @@ internal class AuthService : IAuthService
             return result;
         }
 
-        // Access code validation: assume0 is invalid
+        // Access code validation: assume 0 is invalid
         if (accessCode == 0)
         {
             result.ErrorMessage.Add("Access code must be provided and non-zero.");
@@ -77,6 +77,7 @@ internal class AuthService : IAuthService
 
         result.Success = true;
         result.ErrorCode = ErrorCode.None;
+        result.EmployeeId = employee.Id;
         return result;
     }
 

@@ -20,39 +20,59 @@ public class ApiClient : IApiClient
     }
 
     // Auth: POST /auth/check
-    public async Task<Result> CheckAccessCodeAsync(string userName, int accessCode, CancellationToken cancellationToken = default)
+    public async Task<AuthResult> CheckAccessCodeAsync(string userName, int accessCode, CancellationToken cancellationToken = default)
     {
         var client = _factory.CreateClient("GringottsApiClient");
         var payload = new { UserName = userName, AccessCode = accessCode };
         var resp = await client.PostAsJsonAsync("/auth/check", payload, cancellationToken).ConfigureAwait(false);
 
-        // API returns BaseResponse (with ErrorCode and Errors). Map to Result.
-        var result = new Result();
+        var result = new AuthResult();
 
         try
         {
-            var body = await resp.Content.ReadFromJsonAsync<BaseResponse>(_jsonOptions, cancellationToken).ConfigureAwait(false);
-            if (body != null)
+            if (resp.IsSuccessStatusCode)
             {
-                result.ErrorCode = body.ErrorCode;
-                if (body.Errors != null && body.Errors.Count > 0)
-                    result.ErrorMessage.AddRange(body.Errors);
+                // API returns AuthResponse on success
+                var body = await resp.Content.ReadFromJsonAsync<AuthResponse>(_jsonOptions, cancellationToken).ConfigureAwait(false);
+                if (body != null)
+                {
+                    result.ErrorCode = body.ErrorCode;
+                    result.EmployeeId = body.EmployeeId;
+                    if (body.Errors != null && body.Errors.Count > 0)
+                        result.ErrorMessage.AddRange(body.Errors);
+                }
+
+                result.Success = true;
+                result.ErrorCode = ErrorCode.None;
+            }
+            else
+            {
+                // Try to read error body (BaseResponse)
+                var error = await resp.Content.ReadFromJsonAsync<BaseResponse>(_jsonOptions, cancellationToken).ConfigureAwait(false);
+                if (error != null)
+                {
+                    result.ErrorCode = error.ErrorCode;
+                    if (error.Errors != null && error.Errors.Count > 0)
+                        result.ErrorMessage.AddRange(error.Errors);
+                }
+
+                result.Success = false;
+                if (result.ErrorCode == 0) result.ErrorCode = ErrorCode.InternalError;
             }
         }
         catch
         {
-            // ignore deserialization issues
-        }
-
-        if (resp.IsSuccessStatusCode)
-        {
-            result.Success = true;
-            result.ErrorCode = ErrorCode.None;
-        }
-        else
-        {
-            result.Success = false;
-            if (result.ErrorCode == 0) result.ErrorCode = ErrorCode.InternalError;
+            // In case of deserialization issues, set generic result
+            if (resp.IsSuccessStatusCode)
+            {
+                result.Success = true;
+                result.ErrorCode = ErrorCode.None;
+            }
+            else
+            {
+                result.Success = false;
+                result.ErrorCode = ErrorCode.InternalError;
+            }
         }
 
         return result;

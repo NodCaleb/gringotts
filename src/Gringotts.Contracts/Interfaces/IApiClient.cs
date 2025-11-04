@@ -6,7 +6,7 @@ namespace Gringotts.Contracts.Interfaces;
 
 public interface IApiClient
 {
-    Task<Result> CheckAccessCodeAsync(string userName, int accessCode, CancellationToken cancellationToken = default);
+    Task<AuthResult> CheckAccessCodeAsync(string userName, int accessCode, CancellationToken cancellationToken = default);
 
     Task<CustomerResult> GetCustomerByIdAsync(long id, CancellationToken cancellationToken = default);
 

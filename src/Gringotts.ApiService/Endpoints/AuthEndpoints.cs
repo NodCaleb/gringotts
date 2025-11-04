@@ -20,14 +20,13 @@ public static class AuthEndpoints
 
             var result = await authService.CheckAccessCode(request.UserName, request.AccessCode);
 
-            var response = new BaseResponse { ErrorCode = result.ErrorCode, Errors = result.ErrorMessage };
-
             if (result.Success)
             {
-                // success
-                response.ErrorCode = ErrorCode.None;
-                return Results.Ok(response);
+                var success = new AuthResponse { ErrorCode = ErrorCode.None, EmployeeId = result.EmployeeId };
+                return Results.Ok(success);
             }
+
+            var response = new BaseResponse { ErrorCode = result.ErrorCode, Errors = result.ErrorMessage };
 
             // Map common error codes to HTTP responses
             return result.ErrorCode switch

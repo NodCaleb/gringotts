@@ -21,7 +21,7 @@ public static class AuthEndpoints
             if (result.Success)
             {
                 // Create a simple auth cookie (value is base64 encoded username). In real app use secure tokens.
-                var cookieValue = Convert.ToBase64String(Encoding.UTF8.GetBytes(request.UserName ?? string.Empty));
+                var cookieValue = Convert.ToBase64String(Encoding.UTF8.GetBytes(result.EmployeeId?.ToString() ?? request.UserName));
                 var options = new CookieOptions
                 {
                     HttpOnly = true,
