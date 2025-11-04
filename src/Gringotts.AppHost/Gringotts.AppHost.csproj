@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Gringotts.ApiService\Gringotts.ApiService.csproj" />
+    <ProjectReference Include="..\Gringotts.BFF\Gringotts.BFF.csproj" />
     <ProjectReference Include="..\Gringotts.Bot\Gringotts.Bot.csproj" />
     <ProjectReference Include="..\Gringotts.Seeder\Gringotts.Seeder.csproj" />
     <ProjectReference Include="..\Gringotts.Web\Gringotts.Web.csproj" />

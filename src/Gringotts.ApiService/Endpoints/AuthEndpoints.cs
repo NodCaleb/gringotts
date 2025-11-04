@@ -1,10 +1,10 @@
 ﻿using Gringotts.Infrastructure.Interfaces;
 using Gringotts.Shared.Enums;
 using Gringotts.Contracts.Responses;
+using Gringotts.Contracts.Requests;
+using Microsoft.AspNetCore.Http;
 
 namespace Gringotts.ApiService.Endpoints;
-
-public record AuthRequest(string UserName, int AccessCode);
 
 public static class AuthEndpoints
 {
@@ -34,7 +34,8 @@ public static class AuthEndpoints
             {
                 ErrorCode.ValidationError => Results.BadRequest(response),
                 ErrorCode.EmployeeNotFound => Results.NotFound(response),
-                ErrorCode.AuthenticationFailed => Results.Unauthorized(),
+                // Return 401 with response body when authentication failed
+                ErrorCode.AuthenticationFailed => Results.Json(response, statusCode: StatusCodes.Status401Unauthorized),
                 _ => Results.Problem(detail: result.ErrorMessage.FirstOrDefault() ?? "An error occurred.")
             };
         }).WithName("CheckAccessCode");

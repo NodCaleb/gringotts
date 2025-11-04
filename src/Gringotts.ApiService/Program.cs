@@ -12,7 +12,6 @@ builder.AddNpgsqlDataSource("gringottsdb");
 // Register Infrastructure services and repositories
 builder.Services.AddInfrastructure();
 
-// Add services to the container.
 builder.Services.AddProblemDetails();
 
 // Configure OpenAPI/Swagger

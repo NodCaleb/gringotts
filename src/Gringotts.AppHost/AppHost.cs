@@ -19,16 +19,21 @@ var apiService = builder.AddProject<Projects.Gringotts_ApiService>("gringotts-ap
  .WithReference(gringottsDb)
  .WaitForCompletion(seeder);
 
-builder.AddProject<Projects.Gringotts_Web>("web-frontend")
- .WithExternalHttpEndpoints()
- .WithHttpHealthCheck("/health")
- .WithReference(apiService)
- .WaitFor(apiService);
-
 builder.AddProject<Projects.Gringotts_Bot>("gringotts-bot")
  .WithExternalHttpEndpoints()
  .WithReference(apiService)
  .WaitFor(apiService)
  .WithReference(cache);
+
+var bff = builder.AddProject<Projects.Gringotts_BFF>("gringotts-bff")
+ .WithHttpHealthCheck("/health")
+ .WithReference(apiService)
+ .WaitFor(apiService);
+
+builder.AddProject<Projects.Gringotts_Web>("web-frontend")
+ .WithExternalHttpEndpoints()
+ .WithHttpHealthCheck("/health")
+ .WithReference(bff)
+ .WaitFor(bff);
 
 builder.Build().Run();

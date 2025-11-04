@@ -1,0 +1,6 @@
+@Gringotts.BFF_HostAddress = http://localhost:5197
+
+GET {{Gringotts.BFF_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
