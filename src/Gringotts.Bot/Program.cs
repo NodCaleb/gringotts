@@ -21,6 +21,8 @@ var builder = Host.CreateApplicationBuilder(args);
 // Apply standard service defaults (service discovery, resilience, health checks, OpenTelemetry)
 builder.AddServiceDefaults();
 
+builder.AddRedisDistributedCache(connectionName: "cache");
+
 // Register services
 builder.Services.AddSingleton<ITelegramBotClient>(provider =>
 {
@@ -36,7 +38,7 @@ builder.Services.AddHttpClient("GringottsApiClient", client =>
 
 builder.Services.AddSingleton<IApiClient, ApiClient>();
 
-builder.Services.AddCache("Memory");
+builder.Services.AddCache("Redis");
 
 builder.Services.AddHostedService<GringottsWorker>();
 

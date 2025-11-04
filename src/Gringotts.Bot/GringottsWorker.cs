@@ -3,13 +3,10 @@ using Gringotts.Bot.Markup;
 using Gringotts.Contracts.Interfaces;
 using Gringotts.Contracts.Requests;
 using Gringotts.Domain.Entities;
-using Microsoft.AspNetCore.Mvc.Formatters.Xml;
-using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 using Microsoft.Extensions.Hosting;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace Gringotts.Bot;
 

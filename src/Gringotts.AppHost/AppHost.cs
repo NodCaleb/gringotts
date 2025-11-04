@@ -7,6 +7,8 @@ var postgres = builder
 
 var gringottsDb = postgres.AddDatabase("gringottsdb");
 
+var cache = builder.AddRedis("cache");
+
 var seeder = builder.AddProject<Projects.Gringotts_Seeder>("db-seeder")
     .WithReference(gringottsDb)
     .WaitFor(gringottsDb);
@@ -26,6 +28,7 @@ builder.AddProject<Projects.Gringotts_Web>("web-frontend")
 builder.AddProject<Projects.Gringotts_Bot>("gringotts-bot")
  .WithExternalHttpEndpoints()
  .WithReference(apiService)
- .WaitFor(apiService);
+ .WaitFor(apiService)
+ .WithReference(cache);
 
 builder.Build().Run();

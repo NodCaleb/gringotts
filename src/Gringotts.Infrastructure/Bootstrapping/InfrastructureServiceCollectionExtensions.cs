@@ -29,20 +29,11 @@ namespace Gringotts.Infrastructure.Bootstrapping
         }
         public static IServiceCollection AddCache(
             this IServiceCollection services,
-            string mode,                          // "Memory" or "Redis"
-            string? redisConnectionString = null)
+            string mode)                          // "Memory" or "Redis")
         {
             if (string.Equals(mode, "Redis", StringComparison.OrdinalIgnoreCase))
             {
-                // Packages:
-                // - Microsoft.Extensions.Caching.StackExchangeRedis
-                // - StackExchange.Redis
-                services.AddStackExchangeRedisCache(o =>
-                {
-                    o.Configuration = redisConnectionString
-                        ?? throw new ArgumentNullException(nameof(redisConnectionString));
-                    // Optional: o.InstanceName = "myapp:";
-                });
+                // Make sure to call AddRedisDistributedCache beforehand                
                 services.AddSingleton<ICache, RedisCache>();
             }
             else
