@@ -48,6 +48,10 @@ if (app.Environment.IsDevelopment())
 
 app.MapAuthEndpoints();
 
+app.MapCustomersEndpoints();
+
+app.MapTransactionsEndpoints();
+
 app.MapDefaultEndpoints();
 
 app.UseHttpsRedirection();

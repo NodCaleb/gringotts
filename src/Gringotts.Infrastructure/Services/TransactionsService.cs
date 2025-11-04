@@ -148,28 +148,15 @@ internal class TransactionsService : ITransactionsService
             // No customerId provided - return all transactions mapped to TransactionInfo
             var all = await _transactionsRepository.GetAllAsync(uow.Connection, uow.Transaction);
             // map to TransactionInfo
-            IEnumerable<TransactionInfo> mapped = all.Select(t => new TransactionInfo
-            {
-                Id = t.Id,
-                Date = t.Date,
-                Amount = t.Amount,
-                Description = t.Description,
-                SenderId = t.SenderId,
-                SenderName = null,
-                RecipientId = t.RecipientId,
-                RecipientName = null,
-                EmployeeId = t.EmployeeId,
-                EmployeeName = null
-            })
-            .OrderByDescending(x => x.Date);
+            IEnumerable<TransactionInfo> transactionsList = all.OrderByDescending(x => x.Date);
 
             if (pageNumber.HasValue && pageSize.HasValue)
             {
-                mapped = mapped.Skip((pageNumber.Value - 1) * pageSize.Value).Take(pageSize.Value);
+                transactionsList = transactionsList.Skip((pageNumber.Value - 1) * pageSize.Value).Take(pageSize.Value);
             }
 
             await uow.CommitAsync();
-            return new TransactionsListResult { Success = true, Transactions = mapped.ToList() };
+            return new TransactionsListResult { Success = true, Transactions = transactionsList.OrderByDescending(x => x.Date).ToList() };
         }
         catch (Exception ex)
         {

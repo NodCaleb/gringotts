@@ -2,8 +2,6 @@
 using Gringotts.Contracts.Responses;
 using Gringotts.Contracts.Requests;
 using Gringotts.Infrastructure.Interfaces;
-using Gringotts.Contracts.DTO;
-using Gringotts.Contracts.Results;
 
 namespace Gringotts.ApiService.Endpoints;
 

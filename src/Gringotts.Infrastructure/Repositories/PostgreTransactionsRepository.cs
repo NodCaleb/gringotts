@@ -10,24 +10,50 @@ internal class PostgreTransactionsRepository : ITransactionsRepository
 {
     private const string TableName = "transactions";
 
-    public async Task<Transaction?> GetByIdAsync(Guid id, IDbConnection connection, IDbTransaction dbTransaction, CancellationToken cancellationToken = default)
+    public async Task<TransactionInfo?> GetByIdAsync(Guid id, IDbConnection connection, IDbTransaction dbTransaction, CancellationToken cancellationToken = default)
     {
-        var sql = $@"SELECT *
-            FROM {TableName}
-            WHERE id = @Id";
+        var sql = $@"
+            SELECT t.id as Id,
+             t.date as Date,
+             t.amount as Amount,
+             t.description as Description,
+             t.senderid as SenderId,
+             COALESCE(s.charactername, s.personalname, s.username) as SenderName,
+             t.recipientid as RecipientId,
+             COALESCE(r.charactername, r.personalname, r.username) as RecipientName,
+             t.employeeid as EmployeeId,
+             e.username as EmployeeName
+            FROM {TableName} t
+            LEFT JOIN customers s ON s.id = t.senderid
+            INNER JOIN customers r ON r.id = t.recipientid
+            LEFT JOIN employees e ON e.id = t.employeeid
+            WHERE t.id = @Id";
 
         var cmd = new CommandDefinition(sql, new { Id = id }, transaction: dbTransaction, cancellationToken: cancellationToken);
-        return await connection.QuerySingleOrDefaultAsync<Transaction>(cmd);
+        return await connection.QuerySingleOrDefaultAsync<TransactionInfo>(cmd);
     }
 
-    public async Task<IReadOnlyList<Transaction>> GetAllAsync(IDbConnection connection, IDbTransaction dbTransaction, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<TransactionInfo>> GetAllAsync(IDbConnection connection, IDbTransaction dbTransaction, CancellationToken cancellationToken = default)
     {
-        var sql = $@"SELECT *
-            FROM {TableName}
-            ORDER BY date";
+        var sql = $@"
+            SELECT t.id as Id,
+             t.date as Date,
+             t.amount as Amount,
+             t.description as Description,
+             t.senderid as SenderId,
+             COALESCE(s.charactername, s.personalname, s.username) as SenderName,
+             t.recipientid as RecipientId,
+             COALESCE(r.charactername, r.personalname, r.username) as RecipientName,
+             t.employeeid as EmployeeId,
+             e.username as EmployeeName
+            FROM {TableName} t
+            LEFT JOIN customers s ON s.id = t.senderid
+            INNER JOIN customers r ON r.id = t.recipientid
+            LEFT JOIN employees e ON e.id = t.employeeid
+            ORDER BY t.date";
 
         var cmd = new CommandDefinition(sql, transaction: dbTransaction, cancellationToken: cancellationToken);
-        var result = await connection.QueryAsync<Transaction>(cmd);
+        var result = await connection.QueryAsync<TransactionInfo>(cmd);
         return result.AsList();
     }
 
