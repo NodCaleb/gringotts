@@ -1,6 +1,90 @@
 @ApiService_HostAddress = http://localhost:5508
 
-GET {{ApiService_HostAddress}}/weatherforecast/
+### DB ping
+GET {{ApiService_HostAddress}}/db-ping
 Accept: application/json
 
 ###
+
+### Check access code (auth)
+POST {{ApiService_HostAddress}}/auth/check
+Content-Type: application/json
+
+{
+  "userName": "alice",
+  "accessCode": 1234
+}
+
+###
+
+### Get employees (list)
+GET {{ApiService_HostAddress}}/employees
+Accept: application/json
+
+###
+
+### Get customers (search / pagination)
+GET {{ApiService_HostAddress}}/customers?search={{searchQuery}}&pageNumber={{pageNumber}}&pageSize={{pageSize}}
+Accept: application/json
+
+###
+
+### Get a single customer by id
+GET {{ApiService_HostAddress}}/customers/{{customerId}}
+Accept: application/json
+
+###
+
+### Create or update a customer
+POST {{ApiService_HostAddress}}/customers
+Content-Type: application/json
+
+{
+  "id": 12345,
+  "userName": "@alice",
+  "personalName": "Alice Liddell",
+  "characterName": "Alicia",
+  "balance": 100.50
+}
+
+###
+
+### Update character name (PATCH)
+PATCH {{ApiService_HostAddress}}/customers/{{customerId}}/charactername
+Content-Type: application/json
+
+{
+  "characterName": "NewCharacterName"
+}
+
+###
+
+### Create a transaction
+POST {{ApiService_HostAddress}}/transactions
+Content-Type: application/json
+
+{
+  "recipientId": 54321,
+  "recipientUsername": null,
+  "senderId": 12345,
+  "employeeId": null,
+  "amount": 25.75,
+  "description": "Payment for potion"
+}
+
+###
+
+### Get transactions for a specific customer (optional pagination)
+GET {{ApiService_HostAddress}}/customers/{{customerId}}/transactions?pageNumber={{pageNumber}}&pageSize={{pageSize}}
+Accept: application/json
+
+###
+
+### Get all transactions (optional pagination)
+GET {{ApiService_HostAddress}}/transactions?pageNumber={{pageNumber}}&pageSize={{pageSize}}
+Accept: application/json
+
+###
+````````
+
+# Response
