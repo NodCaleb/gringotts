@@ -1,4 +1,5 @@
 @page "/customers"
+@rendermode InteractiveServer
 @using Gringotts.Domain.Entities
 @using Gringotts.Shared.Enums
 @inject Gringotts.Contracts.Interfaces.IApiClient ApiClient
@@ -34,9 +35,9 @@ else
     <table class="table table-striped">
         <thead>
             <tr>
+                <th>Username</th>
                 <th>Character Name</th>
                 <th>Personal Name</th>
-                <th>Username</th>
                 <th class="text-end">Balance</th>
             </tr>
         </thead>
@@ -44,10 +45,10 @@ else
             @foreach (var c in customers)
             {
                 <tr>
+                    <td><a href="@($"/customers/{c.Id}")">@c.UserName</a></td>
                     <td>@c.CharacterName</td>
                     <td>@c.PersonalName</td>
-                    <td>@c.UserName</td>
-                    <td class="text-end">@c.Balance.ToString("C")</td>
+                    <td class="text-end">@c.Balance.ToString("N2")</td>
                 </tr>
             }
         </tbody>

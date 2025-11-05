@@ -1,0 +1,112 @@
+@page "/transactions"
+@rendermode InteractiveServer
+@using Gringotts.Contracts.DTO
+@using Gringotts.Shared.Enums
+@inject Gringotts.Contracts.Interfaces.IApiClient ApiClient
+
+<PageTitle>Transactions</PageTitle>
+
+<h1>Transactions</h1>
+
+<div class="mb-3 d-flex align-items-center">
+    <label class="me-2">Sort by date:</label>
+    <div class="btn-group" role="group">
+        <button class="btn btn-outline-primary" @onclick="() => SetSort(true)" disabled="@(sortDescending == true)">Newest first</button>
+        <button class="btn btn-outline-primary" @onclick="() => SetSort(false)" disabled="@(sortDescending == false)">Oldest first</button>
+    </div>
+</div>
+
+@if (isLoading)
+{
+    <p><em>Loading...</em></p>
+}
+else if (!string.IsNullOrEmpty(error))
+{
+    <div class="alert alert-danger">@error</div>
+}
+else if (transactions == null || transactions.Count == 0)
+{
+    <p><em>No transactions found.</em></p>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Sender</th>
+                <th>Receiver</th>
+                <th>Bank employee</th>
+                <th class="text-end">Amount</th>
+                <th>Description</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var t in transactions)
+            {
+                <tr>
+                    <td>@t.Date.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
+                    <td>@(string.IsNullOrEmpty(t.SenderName) ? string.Empty : t.SenderName)</td>
+                    <td>@(t.RecipientName ?? string.Empty)</td>
+                    <td>@(t.EmployeeName ?? string.Empty)</td>
+                    <td class="text-end">@t.Amount.ToString("N2")</td>
+                    <td>@(t.Description ?? string.Empty)</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<TransactionInfo>? transactions;
+    private bool isLoading = false;
+    private string? error;
+
+    // true = descending (newest first), false = ascending (oldest first)
+    private bool? sortDescending = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadTransactionsAsync();
+    }
+
+    private async Task SetSort(bool desc)
+    {
+        sortDescending = desc;
+        await LoadTransactionsAsync();
+    }
+
+    private async Task LoadTransactionsAsync()
+    {
+        isLoading = true;
+        error = null;
+        transactions = null;
+
+        try
+        {
+            var result = await ApiClient.GetTransactionsAsync(pageNumber: null, pageSize: null);
+            if (result.Success)
+            {
+                transactions = result.Transactions ?? new List<TransactionInfo>();
+
+                if (sortDescending == true)
+                    transactions = transactions.OrderByDescending(t => t.Date).ToList();
+                else
+                    transactions = transactions.OrderBy(t => t.Date).ToList();
+            }
+            else
+            {
+                error = result.ErrorMessage?.FirstOrDefault() ?? "An error occurred while fetching transactions.";
+            }
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+}

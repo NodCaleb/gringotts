@@ -1,0 +1,145 @@
+@page "/customers/{id:long}"
+@rendermode InteractiveServer
+@using Gringotts.Contracts.DTO
+@using Gringotts.Shared.Enums
+@inject Gringotts.Contracts.Interfaces.IApiClient ApiClient
+@inject NavigationManager Navigation
+
+<PageTitle>Customer Details</PageTitle>
+
+<h1>Customer details</h1>
+
+@if (isLoading)
+{
+    <p><em>Loading...</em></p>
+}
+else if (!string.IsNullOrEmpty(error))
+{
+    <div class="alert alert-danger">@error</div>
+}
+else if (customer == null)
+{
+    <p><em>Customer not found.</em></p>
+}
+else
+{
+    <div class="card mb-3">
+        <div class="card-body">
+            <h5 class="card-title">@customer.CharacterName</h5>
+            <h6 class="card-subtitle mb-2 text-muted">@customer.PersonalName</h6>
+            <div class="row">
+                <div class="col-md-4">
+                    <dl>
+                        <dt>Username</dt>
+                        <dd>@customer.UserName</dd>
+
+                        <dt>Balance</dt>
+                        <dd>@customer.Balance.ToString("N2")</dd>
+                    </dl>
+                </div>
+                <div class="col-md-8">
+                    <!-- Additional customer fields can go here -->
+                </div>
+            </div>
+            <button class="btn btn-secondary mt-2" @onclick="GoBack">Back to list</button>
+        </div>
+    </div>
+
+    <h3>Recent transactions</h3>
+
+    @if (transactions == null || transactions.Count == 0)
+    {
+        <p><em>No transactions found for this customer.</em></p>
+    }
+    else
+    {
+        <table class="table table-sm table-striped">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Sender</th>
+                    <th>Receiver</th>
+                    <th>Bank employee</th>
+                    <th class="text-end">Amount</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var t in transactions)
+                {
+                    <tr>
+                        <td>@t.Date.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
+                        <td>@(string.IsNullOrEmpty(t.SenderName) ? string.Empty : t.SenderName)</td>
+                        <td>@(t.RecipientName ?? string.Empty)</td>
+                        <td>@(t.EmployeeName ?? string.Empty)</td>
+                        <td class="text-end">@t.Amount.ToString("N2")</td>
+                        <td>@(t.Description ?? string.Empty)</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+}
+
+@code {
+    [Parameter]
+    public long id { get; set; }
+
+    private Gringotts.Domain.Entities.Customer? customer;
+    private List<TransactionInfo>? transactions;
+    private bool isLoading = false;
+    private string? error;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadCustomerAsync();
+    }
+
+    private async Task LoadCustomerAsync()
+    {
+        isLoading = true;
+        error = null;
+        customer = null;
+        transactions = null;
+
+        try
+        {
+            var custResult = await ApiClient.GetCustomerByIdAsync(id);
+            if (custResult.Success)
+            {
+                customer = custResult.Customer;
+            }
+            else
+            {
+                error = custResult.ErrorMessage?.FirstOrDefault() ?? "Unable to load customer.";
+            }
+
+            if (customer != null)
+            {
+                var txResult = await ApiClient.GetTransactionsByCustomerAsync(id, pageNumber: null, pageSize: null);
+                if (txResult.Success)
+                {
+                    transactions = txResult.Transactions?.OrderByDescending(t => t.Date).ToList() ?? new List<TransactionInfo>();
+                }
+                else
+                {
+                    // non-fatal for transactions listing
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private void GoBack()
+    {
+        Navigation.NavigateTo("/customers");
+    }
+}
