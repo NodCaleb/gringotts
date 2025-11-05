@@ -18,4 +18,6 @@ public interface IBffClient
     Task<AuthResult> LoginAsync(AuthRequest request, CancellationToken cancellationToken = default);
 
     bool HasAuthCookie { get; }
+
+    Task LogoutAsync(CancellationToken cancellationToken = default);
 }

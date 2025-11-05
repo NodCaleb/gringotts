@@ -22,7 +22,7 @@ public sealed class BffClient : IBffClient
         _http = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
     }
       
-    private void EnsureAuthCookieHeader()
+    private void SetAuthCookieHeader()
     {
         // Keep DefaultRequestHeaders in sync with stored cookie value.
         if (!string.IsNullOrEmpty(_authCookie))
@@ -58,7 +58,7 @@ public sealed class BffClient : IBffClient
                         var cookiePair = end >= 0 ? substr.Substring(0, end) : substr;
                         _authCookie = cookiePair;
                         // apply to default headers so subsequent requests include it
-                        EnsureAuthCookieHeader();
+                        SetAuthCookieHeader();
                         break;
                     }
                 }
@@ -76,10 +76,18 @@ public sealed class BffClient : IBffClient
             ErrorMessage = error?.Errors ?? new List<string>()
         };
     }
+
+    // New: clears stored auth cookie and removes header
+    public Task LogoutAsync(CancellationToken cancellationToken = default)
+    {
+        _authCookie = null;
+        SetAuthCookieHeader();
+        return Task.CompletedTask;
+    }
       
     public async Task<CustomerResult> GetCustomerByIdAsync(long id, CancellationToken cancellationToken = default)
     {
-        EnsureAuthCookieHeader();
+        SetAuthCookieHeader();
 
         var resp = await _http.GetAsync($"/bff/customers/{id}", cancellationToken).ConfigureAwait(false);
         if (resp.IsSuccessStatusCode)
@@ -104,7 +112,7 @@ public sealed class BffClient : IBffClient
         
     public async Task<TransactionResult> CreateTransactionAsync(TransactionRequest request, CancellationToken cancellationToken = default)
     {
-        EnsureAuthCookieHeader();
+        SetAuthCookieHeader();
 
         var resp = await _http.PostAsJsonAsync("/bff/transactions", request, cancellationToken).ConfigureAwait(false);
         if (resp.IsSuccessStatusCode)
@@ -135,7 +143,7 @@ public sealed class BffClient : IBffClient
 
     public async Task<CustomersListResult> SearchCustomersAsync(string? search, int? pageNumber = null, int? pageSize = null, CancellationToken cancellationToken = default)
     {
-        EnsureAuthCookieHeader();
+        SetAuthCookieHeader();
 
         var queryParams = new List<string>();
         if (!string.IsNullOrWhiteSpace(search))
@@ -169,7 +177,7 @@ public sealed class BffClient : IBffClient
 
     public async Task<TransactionsListResult> GetTransactionsAsync(int? pageNumber = null, int? pageSize = null, CancellationToken cancellationToken = default)
     {
-        EnsureAuthCookieHeader();
+        SetAuthCookieHeader();
 
         var queryParams = new List<string>();
         if (pageNumber.HasValue) queryParams.Add($"pageNumber={pageNumber.Value}");
@@ -189,7 +197,7 @@ public sealed class BffClient : IBffClient
 
     public async Task<TransactionsListResult> GetTransactionsByCustomerAsync(long customerId, int? pageNumber = null, int? pageSize = null, CancellationToken cancellationToken = default)
     {
-        EnsureAuthCookieHeader();
+        SetAuthCookieHeader();
 
         var queryParams = new List<string>();
         if (pageNumber.HasValue) queryParams.Add($"pageNumber={pageNumber.Value}");

@@ -1,0 +1,63 @@
+@page "/login"
+@layout Components.Layout.MainLayout
+@using Gringotts.Contracts.Interfaces
+@using Gringotts.Contracts.Requests
+@using System.ComponentModel.DataAnnotations
+@inject NavigationManager NavigationManager
+@inject IBffClient BffClient
+
+<div class="login-page">
+    <div class="login-container">
+        <h3>Login</h3>
+
+        @if (!string.IsNullOrEmpty(_error))
+        {
+            <div class="alert alert-danger">@_error</div>
+        }
+
+        <EditForm Model="_model" OnValidSubmit="HandleValidSubmit" FormName="LoginForm">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div class="mb-3">
+                <label for="username" class="form-label">Username</label>
+                <InputText id="username" class="form-control" @bind-Value="_model.UserName" />
+            </div>
+
+            <div class="mb-3">
+                <label for="accessCode" class="form-label">Access Code</label>
+                <InputNumber id="accessCode" class="form-control" @bind-Value="_model.AccessCode" />
+            </div>
+
+            <button class="btn btn-primary" type="submit">Login</button>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    private LoginModel _model = new LoginModel();
+    private string? _error;
+
+    private async Task HandleValidSubmit()
+    {
+        _error = null;
+        var request = new AuthRequest(_model.UserName ?? string.Empty, _model.AccessCode);
+        var result = await BffClient.LoginAsync(request);
+        if (result.Success)
+        {
+            NavigationManager.NavigateTo("/");
+        }
+        else
+        {
+            _error = result.ErrorMessage?.FirstOrDefault() ?? "Login failed";
+        }
+    }
+
+    private class LoginModel
+    {
+        // [Required]
+        public string? UserName { get; set; }
+
+        public int AccessCode { get; set; }
+    }
+}

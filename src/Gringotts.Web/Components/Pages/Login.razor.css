@@ -1,0 +1,15 @@
+.login-page {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem 1rem;
+}
+
+.login-container {
+    width: 100%;
+    max-width: 500px;
+    background: white;
+    padding: 1.5rem;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
