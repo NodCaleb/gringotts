@@ -2,7 +2,7 @@
 @rendermode InteractiveServer
 @using Gringotts.Contracts.DTO
 @using Gringotts.Shared.Enums
-@inject Gringotts.Contracts.Interfaces.IApiClient ApiClient
+@inject Gringotts.Contracts.Interfaces.IBffClient BffClient
 @inject NavigationManager Navigation
 
 <PageTitle>Customer Details</PageTitle>
@@ -104,7 +104,7 @@ else
 
         try
         {
-            var custResult = await ApiClient.GetCustomerByIdAsync(id);
+            var custResult = await BffClient.GetCustomerByIdAsync(id);
             if (custResult.Success)
             {
                 customer = custResult.Customer;
@@ -116,7 +116,7 @@ else
 
             if (customer != null)
             {
-                var txResult = await ApiClient.GetTransactionsByCustomerAsync(id, pageNumber: null, pageSize: null);
+                var txResult = await BffClient.GetTransactionsByCustomerAsync(id, pageNumber: null, pageSize: null);
                 if (txResult.Success)
                 {
                     transactions = txResult.Transactions?.OrderByDescending(t => t.Date).ToList() ?? new List<TransactionInfo>();

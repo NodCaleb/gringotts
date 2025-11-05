@@ -1,9 +1,7 @@
-using System.Threading;
-using System.Threading.Tasks;
 using Gringotts.Contracts.Requests;
 using Gringotts.Contracts.Results;
 
-namespace Gringotts.Web;
+namespace Gringotts.Contracts.Interfaces;
 
 public interface IBffClient
 {

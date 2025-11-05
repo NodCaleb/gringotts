@@ -13,15 +13,8 @@ builder.Services.AddRazorComponents()
 
 builder.Services.AddOutputCache();
 
-builder.Services.AddHttpClient<WeatherApiClient>(client =>
-    {
-        // This URL uses "https+http://" to indicate HTTPS is preferred over HTTP.
-        // Learn more about service discovery scheme resolution at https://aka.ms/dotnet/sdschemes.
-        client.BaseAddress = new("https+http://apiservice");
-    });
-
 // Typed client for communicating with the Gringotts BFF under the `/bff` endpoints
-builder.Services.AddHttpClient<IApiClient, BffClient>(client =>
+builder.Services.AddHttpClient<IBffClient, BffClient>(client =>
 {
     // This uses the same service discovery scheme pattern as other projects in the solution.
     client.BaseAddress = new Uri("http+https://gringotts-bff");

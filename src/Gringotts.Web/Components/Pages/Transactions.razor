@@ -2,7 +2,7 @@
 @rendermode InteractiveServer
 @using Gringotts.Contracts.DTO
 @using Gringotts.Shared.Enums
-@inject Gringotts.Contracts.Interfaces.IApiClient ApiClient
+@inject Gringotts.Contracts.Interfaces.IBffClient BffClient
 
 <PageTitle>Transactions</PageTitle>
 
@@ -84,7 +84,7 @@ else
 
         try
         {
-            var result = await ApiClient.GetTransactionsAsync(pageNumber: null, pageSize: null);
+            var result = await BffClient.GetTransactionsAsync(pageNumber: null, pageSize: null);
             if (result.Success)
             {
                 transactions = result.Transactions ?? new List<TransactionInfo>();

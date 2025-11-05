@@ -2,7 +2,7 @@
 @rendermode InteractiveServer
 @using Gringotts.Domain.Entities
 @using Gringotts.Shared.Enums
-@inject Gringotts.Contracts.Interfaces.IApiClient ApiClient
+@inject Gringotts.Contracts.Interfaces.IBffClient BffClient
 
 <PageTitle>Customers</PageTitle>
 
@@ -85,7 +85,7 @@ else
 
         try
         {
-            var result = await ApiClient.SearchCustomersAsync(searchText, pageNumber: null, pageSize: null);
+            var result = await BffClient.SearchCustomersAsync(searchText, pageNumber: null, pageSize: null);
             if (result.Success)
             {
                 // Sort by CharacterName then PersonalName as requested

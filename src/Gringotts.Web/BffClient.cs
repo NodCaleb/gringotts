@@ -1,5 +1,4 @@
 using System.Text.Json;
-using System.Threading;
 using Gringotts.Contracts.Interfaces;
 using Gringotts.Contracts.Requests;
 using Gringotts.Contracts.Responses;
@@ -9,11 +8,7 @@ using Gringotts.Shared.Enums;
 
 namespace Gringotts.Web;
 
-/// <summary>
-/// Typed HTTP client for talking to the Gringotts BFF endpoints exposed under `/bff`.
-/// Registered as a typed client for `IApiClient` in `Program.cs`.
-/// </summary>
-public sealed class BffClient : IApiClient
+public sealed class BffClient : IBffClient
 {
     private readonly HttpClient _http;
     private readonly JsonSerializerOptions _jsonOptions = new() { PropertyNameCaseInsensitive = true };
@@ -22,59 +17,7 @@ public sealed class BffClient : IApiClient
     {
         _http = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
     }
-
-    public async Task<AuthResult> CheckAccessCodeAsync(string userName, int accessCode, CancellationToken cancellationToken = default)
-    {
-        var resp = await _http.PostAsJsonAsync("/bff/auth/check", new { UserName = userName, AccessCode = accessCode }, cancellationToken).ConfigureAwait(false);
-        var result = new AuthResult();
-
-        try
-        {
-            if (resp.IsSuccessStatusCode)
-            {
-                var body = await resp.Content.ReadFromJsonAsync<AuthResponse>(_jsonOptions, cancellationToken).ConfigureAwait(false);
-                if (body != null)
-                {
-                    result.ErrorCode = body.ErrorCode;
-                    result.EmployeeId = body.EmployeeId;
-                    if (body.Errors != null && body.Errors.Count > 0)
-                        result.ErrorMessage.AddRange(body.Errors);
-                }
-
-                result.Success = true;
-                result.ErrorCode = ErrorCode.None;
-            }
-            else
-            {
-                var error = await resp.Content.ReadFromJsonAsync<BaseResponse>(_jsonOptions, cancellationToken).ConfigureAwait(false);
-                if (error != null)
-                {
-                    result.ErrorCode = error.ErrorCode;
-                    if (error.Errors != null && error.Errors.Count > 0)
-                        result.ErrorMessage.AddRange(error.Errors);
-                }
-
-                result.Success = false;
-                if (result.ErrorCode == 0) result.ErrorCode = ErrorCode.InternalError;
-            }
-        }
-        catch
-        {
-            if (resp.IsSuccessStatusCode)
-            {
-                result.Success = true;
-                result.ErrorCode = ErrorCode.None;
-            }
-            else
-            {
-                result.Success = false;
-                result.ErrorCode = ErrorCode.InternalError;
-            }
-        }
-
-        return result;
-    }
-
+      
     public async Task<CustomerResult> GetCustomerByIdAsync(long id, CancellationToken cancellationToken = default)
     {
         var resp = await _http.GetAsync($"/bff/customers/{id}", cancellationToken).ConfigureAwait(false);
@@ -97,61 +40,7 @@ public sealed class BffClient : IApiClient
             ErrorMessage = error?.Errors ?? new List<string>()
         };
     }
-
-    public async Task<CustomerResult> CreateCustomerAsync(Customer customer, CancellationToken cancellationToken = default)
-    {
-        var resp = await _http.PostAsJsonAsync("/bff/customers", customer, cancellationToken).ConfigureAwait(false);
-
-        if (resp.IsSuccessStatusCode)
-        {
-            var customerResp = await resp.Content.ReadFromJsonAsync<CustomerResponse>(_jsonOptions, cancellationToken).ConfigureAwait(false);
-            return new CustomerResult
-            {
-                Success = true,
-                ErrorCode = ErrorCode.None,
-                Customer = customerResp?.Customer
-            };
-        }
-
-        var error = await resp.Content.ReadFromJsonAsync<BaseResponse>(_jsonOptions, cancellationToken).ConfigureAwait(false);
-        return new CustomerResult
-        {
-            Success = false,
-            ErrorCode = error?.ErrorCode ?? ErrorCode.InternalError,
-            ErrorMessage = error?.Errors ?? new List<string>()
-        };
-    }
-
-    public async Task<CustomerResult> UpdateCharacterNameAsync(long id, string characterName, CancellationToken cancellationToken = default)
-    {
-        var payload = new { CharacterName = characterName };
-        var request = new HttpRequestMessage(new HttpMethod("PATCH"), $"/bff/customers/{id}/charactername")
-        {
-            Content = JsonContent.Create(payload, options: _jsonOptions)
-        };
-
-        var resp = await _http.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-        if (resp.IsSuccessStatusCode)
-        {
-            var customerResp = await resp.Content.ReadFromJsonAsync<CustomerResponse>(_jsonOptions, cancellationToken).ConfigureAwait(false);
-            return new CustomerResult
-            {
-                Success = true,
-                ErrorCode = ErrorCode.None,
-                Customer = customerResp?.Customer
-            };
-        }
-
-        var error = await resp.Content.ReadFromJsonAsync<BaseResponse>(_jsonOptions, cancellationToken).ConfigureAwait(false);
-        return new CustomerResult
-        {
-            Success = false,
-            ErrorCode = error?.ErrorCode ?? ErrorCode.InternalError,
-            ErrorMessage = error?.Errors ?? new List<string>()
-        };
-    }
-
+        
     public async Task<TransactionResult> CreateTransactionAsync(TransactionRequest request, CancellationToken cancellationToken = default)
     {
         var resp = await _http.PostAsJsonAsync("/bff/transactions", request, cancellationToken).ConfigureAwait(false);
