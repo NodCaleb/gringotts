@@ -9,4 +9,6 @@ public interface IAuthService
 
     // Return list of employee info (id + username), access codes filtered out
     Task<IReadOnlyList<EmployeeInfo>> GetEmployeeListAsync();
+
+    Task<EmployeeResult> GetEmployeeByIdAsync(Guid id);
 }

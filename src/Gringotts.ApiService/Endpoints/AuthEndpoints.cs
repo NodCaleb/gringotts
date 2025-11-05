@@ -45,5 +45,24 @@ public static class AuthEndpoints
             var resp = new EmployeesListResponse { ErrorCode = ErrorCode.None, Employees = infos.ToList() };
             return Results.Ok(resp);
         }).WithName("GetEmployees");
+
+        app.MapGet("/employees/{id:guid}", async (IAuthService authService, Guid id) =>
+        {
+            var result = await authService.GetEmployeeByIdAsync(id);
+            if (result.Success && result.Employee != null)
+            {
+                var resp = new EmployeeResponse { ErrorCode = ErrorCode.None, Employee = result.Employee };
+                return Results.Ok(resp);
+            }
+
+            var err = new EmployeeResponse { ErrorCode = result.ErrorCode, Errors = result.Errors };
+
+            return result.ErrorCode switch
+            {
+                ErrorCode.EmployeeNotFound => Results.NotFound(err),
+                ErrorCode.ValidationError => Results.BadRequest(err),
+                _ => Results.Problem(detail: result.Errors.FirstOrDefault() ?? "An error occurred.")
+            };
+        }).WithName("GetEmployeeById");
     }
 }

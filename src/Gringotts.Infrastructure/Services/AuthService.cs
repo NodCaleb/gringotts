@@ -100,4 +100,44 @@ internal class AuthService : IAuthService
             return Array.Empty<EmployeeInfo>();
         }
     }
+
+    public async Task<EmployeeResult> GetEmployeeByIdAsync(Guid id)
+    {
+        var result = new EmployeeResult();
+        if (id == Guid.Empty)
+        {
+            result.Success = false;
+            result.ErrorCode = ErrorCode.ValidationError;
+            result.Errors.Add("Invalid employee id.");
+            return result;
+        }
+
+        using var uow = _unitOfWorkFactory.Create();
+        try
+        {
+            var employee = await _employeeRepository.GetByIdAsync(id, uow.Connection, uow.Transaction);
+            await uow.CommitAsync();
+
+            if (employee == null)
+            {
+                result.Success = false;
+                result.ErrorCode = ErrorCode.EmployeeNotFound;
+                result.Errors.Add("Employee not found.");
+                return result;
+            }
+
+            result.Success = true;
+            result.ErrorCode = ErrorCode.None;
+            result.Employee = new EmployeeInfo { Id = employee.Id, UserName = employee.UserName };
+            return result;
+        }
+        catch (Exception ex)
+        {
+            await uow.RollbackAsync();
+            result.Success = false;
+            result.ErrorCode = ErrorCode.InternalError;
+            result.Errors.Add(ex.Message);
+            return result;
+        }
+    }
 }

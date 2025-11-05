@@ -280,4 +280,30 @@ public class ApiClient : IApiClient
         var error = await resp.Content.ReadFromJsonAsync<BaseResponse>(_jsonOptions, cancellationToken).ConfigureAwait(false);
         return new TransactionsListResult { Success = false, ErrorCode = error?.ErrorCode ?? ErrorCode.InternalError, ErrorMessage = error?.Errors ?? new List<string>() };
     }
+
+    // New: GET /employees/{id}
+    public async Task<EmployeeResult> GetEmployeeByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var client = _factory.CreateClient("GringottsApiClient");
+        var resp = await client.GetAsync($"/employees/{id}", cancellationToken).ConfigureAwait(false);
+
+        if (resp.IsSuccessStatusCode)
+        {
+            var empResp = await resp.Content.ReadFromJsonAsync<EmployeeResponse>(_jsonOptions, cancellationToken).ConfigureAwait(false);
+            return new EmployeeResult
+            {
+                Success = true,
+                ErrorCode = ErrorCode.None,
+                Employee = empResp?.Employee
+            };
+        }
+
+        var error = await resp.Content.ReadFromJsonAsync<BaseResponse>(_jsonOptions, cancellationToken).ConfigureAwait(false);
+        return new EmployeeResult
+        {
+            Success = false,
+            ErrorCode = error?.ErrorCode ?? ErrorCode.InternalError,
+            Errors = error?.Errors ?? new List<string>()
+        };
+    }
 }

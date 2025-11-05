@@ -1,5 +1,5 @@
-using System.Net.Http.Json;
 using System.Text.Json;
+using System.Threading;
 using Gringotts.Contracts.Interfaces;
 using Gringotts.Contracts.Requests;
 using Gringotts.Contracts.Responses;
@@ -13,21 +13,19 @@ namespace Gringotts.Web;
 /// Typed HTTP client for talking to the Gringotts BFF endpoints exposed under `/bff`.
 /// Registered as a typed client for `IApiClient` in `Program.cs`.
 /// </summary>
-public sealed class ApiClient : IApiClient
+public sealed class BffClient : IApiClient
 {
     private readonly HttpClient _http;
     private readonly JsonSerializerOptions _jsonOptions = new() { PropertyNameCaseInsensitive = true };
 
-    public ApiClient(HttpClient httpClient)
+    public BffClient(HttpClient httpClient)
     {
         _http = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
     }
 
     public async Task<AuthResult> CheckAccessCodeAsync(string userName, int accessCode, CancellationToken cancellationToken = default)
     {
-        var payload = new { UserName = userName, AccessCode = accessCode };
-        var resp = await _http.PostAsJsonAsync("/bff/auth/check", payload, cancellationToken).ConfigureAwait(false);
-
+        var resp = await _http.PostAsJsonAsync("/bff/auth/check", new { UserName = userName, AccessCode = accessCode }, cancellationToken).ConfigureAwait(false);
         var result = new AuthResult();
 
         try
@@ -103,6 +101,7 @@ public sealed class ApiClient : IApiClient
     public async Task<CustomerResult> CreateCustomerAsync(Customer customer, CancellationToken cancellationToken = default)
     {
         var resp = await _http.PostAsJsonAsync("/bff/customers", customer, cancellationToken).ConfigureAwait(false);
+
         if (resp.IsSuccessStatusCode)
         {
             var customerResp = await resp.Content.ReadFromJsonAsync<CustomerResponse>(_jsonOptions, cancellationToken).ConfigureAwait(false);
@@ -132,6 +131,7 @@ public sealed class ApiClient : IApiClient
         };
 
         var resp = await _http.SendAsync(request, cancellationToken).ConfigureAwait(false);
+
         if (resp.IsSuccessStatusCode)
         {
             var customerResp = await resp.Content.ReadFromJsonAsync<CustomerResponse>(_jsonOptions, cancellationToken).ConfigureAwait(false);

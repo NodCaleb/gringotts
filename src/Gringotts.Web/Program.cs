@@ -21,7 +21,7 @@ builder.Services.AddHttpClient<WeatherApiClient>(client =>
     });
 
 // Typed client for communicating with the Gringotts BFF under the `/bff` endpoints
-builder.Services.AddHttpClient<IApiClient, ApiClient>(client =>
+builder.Services.AddHttpClient<IApiClient, BffClient>(client =>
 {
     // This uses the same service discovery scheme pattern as other projects in the solution.
     client.BaseAddress = new Uri("http+https://gringotts-bff");
