@@ -2,6 +2,7 @@
 using Gringotts.Contracts.Interfaces;
 using Gringotts.Shared.Enums;
 using System.Text;
+using Gringotts.BFF.Internals;
 
 namespace Gringotts.BFF.Endpoints;
 
@@ -9,7 +10,7 @@ public static class AuthEndpoints
 {
     public static void MapAuthEndpoints(this WebApplication app)
     {
-        app.MapPost("/auth/login", async (IApiClient apiClient, HttpContext http, AuthRequest request) =>
+        app.MapPost("/auth/login", async (IApiClient apiClient, HttpContext http, AuthRequest request, ICache cache, TokensService tokensService) =>
         {
             if (request == null)
             {
@@ -18,22 +19,23 @@ public static class AuthEndpoints
 
             var result = await apiClient.CheckAccessCodeAsync(request.UserName, request.AccessCode);
 
-            if (result.Success)
+            if (result.Success && result.EmployeeId.HasValue)
             {
-                // Create a simple auth cookie (value is base64 encoded username). In real app use secure tokens.
-                var cookieValue = Convert.ToBase64String(Encoding.UTF8.GetBytes(result.EmployeeId?.ToString() ?? request.UserName));
-                var options = new CookieOptions
+                var (accessToken, refreshSession) = tokensService.CreateTokenPair(result.EmployeeId.Value.ToString(), request.UserName, "Admin");
+
+                // persist refresh session (rotation-safe)
+                await cache.SetAsync(refreshSession.Token, refreshSession, refreshSession.ExpiresUtc - DateTimeOffset.UtcNow);
+
+                // set refresh cookie (HttpOnly)
+                http.Response.Cookies.Append("gr_rf", refreshSession.Token, new CookieOptions
                 {
                     HttpOnly = true,
-                    Secure = http.Request.IsHttps,
-                    SameSite = SameSiteMode.Strict,
-                    Expires = DateTimeOffset.UtcNow.AddHours(8),
-                    Path = "/"
-                };
+                    Secure = true,
+                    SameSite = SameSiteMode.Strict, // Strict/Lax; Strict is safest
+                    Expires = refreshSession.ExpiresUtc
+                });
 
-                http.Response.Cookies.Append("gringotts_auth", cookieValue, options);
-
-                return Results.Ok(new { message = "Authenticated" });
+                return Results.Ok(new { access_token = accessToken });
             }
 
             // Map API error codes to HTTP responses
@@ -46,5 +48,43 @@ public static class AuthEndpoints
             };
 
         }).WithName("BffLogin");
+
+        app.MapPost("/auth/refresh", async (HttpContext http, TokensService tokensService, ICache cache) =>
+        {
+            if (!http.Request.Cookies.TryGetValue("gr_rf", out var oldToken))
+                return Results.Unauthorized();
+
+            var refreshSession = await cache.GetAsync<RefreshSession>(oldToken);
+            if (refreshSession is null || refreshSession.RevokedUtc is not null || refreshSession.ExpiresUtc < DateTimeOffset.UtcNow)
+                return Results.Unauthorized();
+
+            // rotate refresh token
+            var (access, newRefreshSession) = tokensService.CreateTokenPair(refreshSession.UserId, refreshSession.Username, refreshSession.Role);
+
+            await cache.RemoveAsync(oldToken);
+            await cache.SetAsync(newRefreshSession.Token, newRefreshSession, newRefreshSession.ExpiresUtc - DateTimeOffset.UtcNow);
+
+            http.Response.Cookies.Append("gr_rf", newRefreshSession.Token, new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.Strict,
+                Expires = newRefreshSession.ExpiresUtc
+            });
+
+            return Results.Ok(new { access_token = access });
+
+        }).WithName("BffRefresh");
+
+        app.MapPost("/auth/logout", async (HttpContext http, ICache cache) =>
+        {
+            if (http.Request.Cookies.TryGetValue("gr_rf", out var token))
+            {
+                await cache.RemoveAsync(token);
+                http.Response.Cookies.Delete("gr_rf", new CookieOptions { Secure = true, SameSite = SameSiteMode.Strict });
+            }
+            return Results.Ok();
+
+        }).WithName("BffLogout");
     }
 }

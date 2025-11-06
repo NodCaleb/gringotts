@@ -28,7 +28,8 @@ builder.AddProject<Projects.Gringotts_Bot>("gringotts-bot")
 var bff = builder.AddProject<Projects.Gringotts_BFF>("gringotts-bff")
  .WithHttpHealthCheck("/health")
  .WithReference(apiService)
- .WaitFor(apiService);
+ .WaitFor(apiService)
+ .WithReference(cache);
 
 builder.AddProject<Projects.Gringotts_Web>("web-frontend")
  .WithExternalHttpEndpoints()
