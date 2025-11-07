@@ -1,0 +1,17 @@
+﻿@page "/logout"
+@using Gringotts.Contracts.Interfaces
+@using Gringotts.Web.Internals
+@inject AccessTokenStore TokenStore
+@inject NavigationManager NavigationManager
+@inject IBffClient BffClient
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+
+        await BffClient.LogoutAsync();
+        TokenStore.Set(null);
+        NavigationManager.NavigateTo("/login", replace: true);
+    }
+}

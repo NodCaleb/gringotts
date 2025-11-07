@@ -18,19 +18,25 @@ internal class AuthenticatedHttpHandler : DelegatingHandler
 
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken ct)
     {
-        if (_store.HasToken)
-            request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _store.Get());
+        if (await _store.HasTokenAsync().ConfigureAwait(false))
+        {
+            var token = await _store.GetAsync().ConfigureAwait(false);
+            if (!string.IsNullOrEmpty(token))
+                request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        }
 
-        var response = await base.SendAsync(request, ct);
+        var response = await base.SendAsync(request, ct).ConfigureAwait(false);
         if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
         {
-            var ok = await TryRefreshAsync(ct);
+            var ok = await TryRefreshAsync(ct).ConfigureAwait(false);
             if (ok)
             {
                 // retry once
-                request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _store.Get());
+                var token = await _store.GetAsync().ConfigureAwait(false);
+                if (!string.IsNullOrEmpty(token))
+                    request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
                 response.Dispose();
-                return await base.SendAsync(request, ct);
+                return await base.SendAsync(request, ct).ConfigureAwait(false);
             }
         }
         return response;
@@ -39,8 +45,8 @@ internal class AuthenticatedHttpHandler : DelegatingHandler
     private async Task<bool> TryRefreshAsync(CancellationToken ct)
     {
         var client = _httpClientFactory.CreateClient("GringottsAuthClient");
-        var res = await client.PostAsync("/auth/refresh", content: null, ct);
-        if (res.IsSuccessStatusCode) 
+        var res = await client.PostAsync("/auth/refresh", content: null, ct).ConfigureAwait(false);
+        if (res.IsSuccessStatusCode)
         {
             var authResp = await res.Content.ReadFromJsonAsync<AuthResponse>(_jsonOptions, ct).ConfigureAwait(false);
             if (authResp is not null)
@@ -48,7 +54,7 @@ internal class AuthenticatedHttpHandler : DelegatingHandler
                 _store.Set(authResp.AccessToken);
                 return true;
             }
-        }        
+        }
 
         _store.Set(null);
         return false;

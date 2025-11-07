@@ -96,7 +96,7 @@ internal sealed class BffClient : IBffClient
 
     public async Task<bool> LogoutAsync(CancellationToken cancellationToken = default)
     {
-        var client = _factory.CreateClient("GringottsBffClient");
+        var client = _factory.CreateClient("GringottsAuthClient");
         var resp = await client.PostAsync("/auth/logout", null, cancellationToken).ConfigureAwait(false);
         return resp.IsSuccessStatusCode;
     }

@@ -11,7 +11,7 @@
 
 <div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
     <nav class="nav flex-column">
-        @if (TokenStore.HasToken)
+        @if (_hasToken)
         {
             <div class="nav-item px-3">
                 <NavLink class="nav-link" href="customers">
@@ -25,4 +25,22 @@
             </div>
         }        
     </nav>
+
+    @if (_hasToken)
+    {
+        <div class="nav-item logout-footer px-3">
+            <NavLink class="nav-link btn-logout" href="logout" style="padding-left: 16px">
+                <span class="bi bi-box-arrow-right" aria-hidden="true"></span> Logout
+            </NavLink>
+        </div>
+    }
 </div>
+
+@code {
+    private bool _hasToken;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _hasToken = await TokenStore.HasTokenAsync().ConfigureAwait(false);
+    }
+}

@@ -86,3 +86,11 @@
         overflow-y: auto;
     }
 }
+
+.nav-scrollable { display: flex; flex-direction: column; justify-content: space-between; height: calc(100vh - 3.5rem); }
+
+.logout-footer { margin-top: 1rem; padding-bottom: 1rem; }
+
+.btn-logout { color: #d7d7d7; display: inline-block; }
+
+.btn-logout::deep(.nav-link) { color: inherit; }

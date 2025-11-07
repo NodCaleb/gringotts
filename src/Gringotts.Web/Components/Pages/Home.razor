@@ -3,17 +3,11 @@
 @inject AccessTokenStore TokenStore
 @inject NavigationManager NavigationManager
 
-<PageTitle>Home</PageTitle>
-
-<h1>Hello, world!</h1>
-
-Welcome to your new app.
-
 @code {
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        base.OnInitialized();
-        if (TokenStore.HasToken)
+        await base.OnInitializedAsync();
+        if (await TokenStore.HasTokenAsync().ConfigureAwait(false))
         {
             NavigationManager.NavigateTo("/customers", replace: true);
         }
