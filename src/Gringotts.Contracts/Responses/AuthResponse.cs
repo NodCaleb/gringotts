@@ -6,4 +6,5 @@ namespace Gringotts.Contracts.Responses;
 public class AuthResponse : BaseResponse
 {
     public Guid? EmployeeId { get; set; }
+    public string? AccessToken { get; set; }
 }

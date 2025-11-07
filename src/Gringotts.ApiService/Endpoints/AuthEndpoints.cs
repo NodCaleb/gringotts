@@ -2,7 +2,6 @@
 using Gringotts.Shared.Enums;
 using Gringotts.Contracts.Responses;
 using Gringotts.Contracts.Requests;
-using Microsoft.AspNetCore.Http;
 
 namespace Gringotts.ApiService.Endpoints;
 

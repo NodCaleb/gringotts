@@ -5,7 +5,7 @@
 @using Gringotts.Contracts.Requests
 @using System.ComponentModel.DataAnnotations
 @inject NavigationManager NavigationManager
-@inject IBffClient BffClient
+@* @inject IBffClient BffClient *@
 
 <div class="login-page">
     <div class="login-container">
@@ -41,17 +41,17 @@
 
     private async Task HandleValidSubmit()
     {
-        _error = null;
-        var request = new AuthRequest(_model.UserName ?? string.Empty, _model.AccessCode);
-        var result = await BffClient.LoginAsync(request);
-        if (result.Success)
-        {
-            NavigationManager.NavigateTo("/");
-        }
-        else
-        {
-            _error = result.ErrorMessage?.FirstOrDefault() ?? "Login failed";
-        }
+        // _error = null;
+        // var request = new AuthRequest(_model.UserName ?? string.Empty, _model.AccessCode);
+        // var result = await BffClient.LoginAsync(request);
+        // if (result.Success)
+        // {
+        //     NavigationManager.NavigateTo("/");
+        // }
+        // else
+        // {
+        //     _error = result.ErrorMessage?.FirstOrDefault() ?? "Login failed";
+        // }
     }
 
     private class LoginModel

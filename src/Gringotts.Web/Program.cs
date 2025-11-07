@@ -45,12 +45,14 @@ builder.Services.AddAuthorization(options =>
 
 builder.Services.AddOutputCache();
 
-// Typed client for communicating with the Gringotts BFF under the `/bff` endpoints
-builder.Services.AddHttpClient<IBffClient, BffClient>(client =>
+// Register IHttpClientFactory and the ApiClient implementation for IApiClient
+builder.Services.AddHttpClient("GringottsBffClient", client =>
 {
-    // This uses the same service discovery scheme pattern as other projects in the solution.
     client.BaseAddress = new Uri("http+https://gringotts-bff");
 });
+
+// Typed client for communicating with the Gringotts BFF under the `/bff` endpoints
+builder.Services.AddSingleton<IBffClient, BffClient>();
 
 var app = builder.Build();
 

@@ -1,8 +1,8 @@
 ﻿using Gringotts.Contracts.Requests;
 using Gringotts.Contracts.Interfaces;
 using Gringotts.Shared.Enums;
-using System.Text;
 using Gringotts.BFF.Internals;
+using Gringotts.Contracts.Responses;
 
 namespace Gringotts.BFF.Endpoints;
 
@@ -21,7 +21,7 @@ public static class AuthEndpoints
 
             if (result.Success && result.EmployeeId.HasValue)
             {
-                var (accessToken, refreshSession) = tokensService.CreateTokenPair(result.EmployeeId.Value.ToString(), request.UserName, "Admin");
+                var (accessToken, refreshSession) = tokensService.CreateTokenPair(result.EmployeeId.Value, request.UserName, "Admin");
 
                 // persist refresh session (rotation-safe)
                 await cache.SetAsync(refreshSession.Token, refreshSession, refreshSession.ExpiresUtc - DateTimeOffset.UtcNow);
@@ -35,7 +35,14 @@ public static class AuthEndpoints
                     Expires = refreshSession.ExpiresUtc
                 });
 
-                return Results.Ok(new { access_token = accessToken });
+                var resp = new AuthResponse
+                {
+                    ErrorCode = ErrorCode.None,
+                    AccessToken = accessToken,
+                    EmployeeId = result.EmployeeId
+                };
+
+                return Results.Ok(resp);
             }
 
             // Map API error codes to HTTP responses
@@ -72,7 +79,14 @@ public static class AuthEndpoints
                 Expires = newRefreshSession.ExpiresUtc
             });
 
-            return Results.Ok(new { access_token = access });
+            var authResp = new AuthResponse
+            {
+                ErrorCode = ErrorCode.None,
+                AccessToken = access,
+                EmployeeId = refreshSession.UserId
+            };
+
+            return Results.Ok(authResp);
 
         }).WithName("BffRefresh");
 

@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Net.Http.Json;
 using Gringotts.Contracts.Interfaces;
 using Gringotts.Contracts.Requests;
 using Gringotts.Contracts.Responses;
@@ -10,24 +11,31 @@ namespace Gringotts.Web;
 
 public sealed class BffClient : IBffClient
 {
-    private readonly HttpClient _http;
+    private readonly IHttpClientFactory _factory;
     private readonly JsonSerializerOptions _jsonOptions = new() { PropertyNameCaseInsensitive = true };
-    private string? _authCookie; // stores cookie header value like "gringotts_auth=..."
 
-    public BffClient(HttpClient httpClient)
+    public BffClient(IHttpClientFactory factory)
     {
-        _http = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
+        _factory = factory ?? throw new ArgumentNullException(nameof(factory));
     }
 
     public async Task<AuthResult> LoginAsync(AuthRequest request, CancellationToken cancellationToken = default)
     {
         if (request == null) throw new ArgumentNullException(nameof(request));
 
-        var resp = await _http.PostAsJsonAsync("/auth/login", request, cancellationToken).ConfigureAwait(false);
+        var client = _factory.CreateClient("GringottsBffClient");
+        var resp = await client.PostAsJsonAsync("/auth/login", request, cancellationToken).ConfigureAwait(false);
         if (resp.IsSuccessStatusCode)
         {
-            // Successful login - the BFF returns a simple message body. We return success and any cookie is stored.
-            return new AuthResult { Success = true, ErrorCode = ErrorCode.None };
+            var authResp = await resp.Content.ReadFromJsonAsync<AuthResponse>(_jsonOptions, cancellationToken).ConfigureAwait(false);
+            return new AuthResult
+            {
+                Success = true,
+                ErrorCode = authResp?.ErrorCode ?? ErrorCode.None,
+                ErrorMessage = authResp?.Errors ?? new List<string>(),
+                EmployeeId = authResp?.EmployeeId,
+                AccessToken = authResp?.AccessToken
+            };
         }
 
         var error = await resp.Content.ReadFromJsonAsync<BaseResponse>(_jsonOptions, cancellationToken).ConfigureAwait(false);
@@ -38,10 +46,44 @@ public sealed class BffClient : IBffClient
             ErrorMessage = error?.Errors ?? new List<string>()
         };
     }
-      
+
+    public async Task<AuthResult> RefreshAsync(CancellationToken cancellationToken = default)
+    {
+        var client = _factory.CreateClient("GringottsBffClient");
+        var resp = await client.PostAsync("/auth/refresh", null, cancellationToken).ConfigureAwait(false);
+        if (resp.IsSuccessStatusCode)
+        {
+            var authResp = await resp.Content.ReadFromJsonAsync<AuthResponse>(_jsonOptions, cancellationToken).ConfigureAwait(false);
+            return new AuthResult
+            {
+                Success = true,
+                ErrorCode = authResp?.ErrorCode ?? ErrorCode.None,
+                ErrorMessage = authResp?.Errors ?? new List<string>(),
+                EmployeeId = authResp?.EmployeeId,
+                AccessToken = authResp?.AccessToken
+            };
+        }
+
+        var error = await resp.Content.ReadFromJsonAsync<BaseResponse>(_jsonOptions, cancellationToken).ConfigureAwait(false);
+        return new AuthResult
+        {
+            Success = false,
+            ErrorCode = error?.ErrorCode ?? ErrorCode.InternalError,
+            ErrorMessage = error?.Errors ?? new List<string>()
+        };
+    }
+
+    public async Task<bool> LogoutAsync(CancellationToken cancellationToken = default)
+    {
+        var client = _factory.CreateClient("GringottsBffClient");
+        var resp = await client.PostAsync("/auth/logout", null, cancellationToken).ConfigureAwait(false);
+        return resp.IsSuccessStatusCode;
+    }
+
     public async Task<CustomerResult> GetCustomerByIdAsync(long id, CancellationToken cancellationToken = default)
     {
-        var resp = await _http.GetAsync($"/bff/customers/{id}", cancellationToken).ConfigureAwait(false);
+        var client = _factory.CreateClient("GringottsBffClient");
+        var resp = await client.GetAsync($"/bff/customers/{id}", cancellationToken).ConfigureAwait(false);
         if (resp.IsSuccessStatusCode)
         {
             var customerResp = await resp.Content.ReadFromJsonAsync<CustomerResponse>(_jsonOptions, cancellationToken).ConfigureAwait(false);
@@ -64,7 +106,8 @@ public sealed class BffClient : IBffClient
         
     public async Task<TransactionResult> CreateTransactionAsync(TransactionRequest request, CancellationToken cancellationToken = default)
     {
-        var resp = await _http.PostAsJsonAsync("/bff/transactions", request, cancellationToken).ConfigureAwait(false);
+        var client = _factory.CreateClient("GringottsBffClient");
+        var resp = await client.PostAsJsonAsync("/bff/transactions", request, cancellationToken).ConfigureAwait(false);
         if (resp.IsSuccessStatusCode)
         {
             try
@@ -93,6 +136,7 @@ public sealed class BffClient : IBffClient
 
     public async Task<CustomersListResult> SearchCustomersAsync(string? search, int? pageNumber = null, int? pageSize = null, CancellationToken cancellationToken = default)
     {
+        var client = _factory.CreateClient("GringottsBffClient");
         var queryParams = new List<string>();
         if (!string.IsNullOrWhiteSpace(search))
             queryParams.Add($"search={Uri.EscapeDataString(search)}");
@@ -102,7 +146,7 @@ public sealed class BffClient : IBffClient
             queryParams.Add($"pageSize={pageSize.Value}");
 
         var url = "/bff/customers" + (queryParams.Count > 0 ? "?" + string.Join("&", queryParams) : string.Empty);
-        var resp = await _http.GetAsync(url, cancellationToken).ConfigureAwait(false);
+        var resp = await client.GetAsync(url, cancellationToken).ConfigureAwait(false);
         if (resp.IsSuccessStatusCode)
         {
             var listResp = await resp.Content.ReadFromJsonAsync<CustomersListResponse>(_jsonOptions, cancellationToken).ConfigureAwait(false);
@@ -125,12 +169,13 @@ public sealed class BffClient : IBffClient
 
     public async Task<TransactionsListResult> GetTransactionsAsync(int? pageNumber = null, int? pageSize = null, CancellationToken cancellationToken = default)
     {
+        var client = _factory.CreateClient("GringottsBffClient");
         var queryParams = new List<string>();
         if (pageNumber.HasValue) queryParams.Add($"pageNumber={pageNumber.Value}");
         if (pageSize.HasValue) queryParams.Add($"pageSize={pageSize.Value}");
         var url = "/bff/transactions" + (queryParams.Count > 0 ? "?" + string.Join("&", queryParams) : string.Empty);
 
-        var resp = await _http.GetAsync(url, cancellationToken).ConfigureAwait(false);
+        var resp = await client.GetAsync(url, cancellationToken).ConfigureAwait(false);
         if (resp.IsSuccessStatusCode)
         {
             var listResp = await resp.Content.ReadFromJsonAsync<TransactionsListResponse>(_jsonOptions, cancellationToken).ConfigureAwait(false);
@@ -143,12 +188,13 @@ public sealed class BffClient : IBffClient
 
     public async Task<TransactionsListResult> GetTransactionsByCustomerAsync(long customerId, int? pageNumber = null, int? pageSize = null, CancellationToken cancellationToken = default)
     {
+        var client = _factory.CreateClient("GringottsBffClient");
         var queryParams = new List<string>();
         if (pageNumber.HasValue) queryParams.Add($"pageNumber={pageNumber.Value}");
         if (pageSize.HasValue) queryParams.Add($"pageSize={pageSize.Value}");
         var url = $"/bff/customers/{customerId}/transactions" + (queryParams.Count > 0 ? "?" + string.Join("&", queryParams) : string.Empty);
 
-        var resp = await _http.GetAsync(url, cancellationToken).ConfigureAwait(false);
+        var resp = await client.GetAsync(url, cancellationToken).ConfigureAwait(false);
         if (resp.IsSuccessStatusCode)
         {
             var listResp = await resp.Content.ReadFromJsonAsync<TransactionsListResponse>(_jsonOptions, cancellationToken).ConfigureAwait(false);

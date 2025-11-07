@@ -11,14 +11,14 @@ internal class TokensService
     private readonly JwtOptions _opt;
     public TokensService(JwtOptions opt) => _opt = opt;
 
-    public (string access, RefreshSession refresh) CreateTokenPair(string userId, string username, string role)
+    public (string access, RefreshSession refresh) CreateTokenPair(Guid userId, string username, string role)
     {
         var now = DateTimeOffset.UtcNow;
 
         // Access token
         var claims = new[]
         {
-            new Claim(ClaimTypes.NameIdentifier, userId),
+            new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
             new Claim(ClaimTypes.Name, username),
             new Claim(ClaimTypes.Role, role)
         };

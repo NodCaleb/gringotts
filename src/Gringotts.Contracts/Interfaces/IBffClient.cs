@@ -16,4 +16,8 @@ public interface IBffClient
     Task<TransactionsListResult> GetTransactionsByCustomerAsync(long customerId, int? pageNumber = null, int? pageSize = null, CancellationToken cancellationToken = default);
 
     Task<AuthResult> LoginAsync(AuthRequest request, CancellationToken cancellationToken = default);
+
+    Task<AuthResult> RefreshAsync(CancellationToken cancellationToken = default);
+
+    Task<bool> LogoutAsync(CancellationToken cancellationToken = default);
 }
