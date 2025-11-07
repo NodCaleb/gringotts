@@ -22,7 +22,7 @@ internal sealed class BffClient : IBffClient
     {
         if (request == null) throw new ArgumentNullException(nameof(request));
 
-        var client = _factory.CreateClient("GringottsBffClient");
+        var client = _factory.CreateClient("GringottsAuthClient");
         var resp = await client.PostAsJsonAsync("/auth/login", request, cancellationToken).ConfigureAwait(false);
         if (resp.IsSuccessStatusCode)
         {
@@ -37,18 +37,29 @@ internal sealed class BffClient : IBffClient
             };
         }
 
-        var error = await resp.Content.ReadFromJsonAsync<BaseResponse>(_jsonOptions, cancellationToken).ConfigureAwait(false);
+        // Don't attempt to deserialize error body. Return mapped error code and raw message.
+        var raw = await resp.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+        var message = string.IsNullOrWhiteSpace(raw) ? resp.ReasonPhrase ?? resp.StatusCode.ToString() : raw;
+
+        var mappedCode = resp.StatusCode switch
+        {
+            System.Net.HttpStatusCode.BadRequest => ErrorCode.ValidationError,
+            System.Net.HttpStatusCode.NotFound => ErrorCode.EmployeeNotFound,
+            System.Net.HttpStatusCode.Unauthorized => ErrorCode.AuthenticationFailed,
+            _ => ErrorCode.InternalError
+        };
+
         return new AuthResult
         {
             Success = false,
-            ErrorCode = error?.ErrorCode ?? ErrorCode.InternalError,
-            ErrorMessage = error?.Errors ?? new List<string>()
+            ErrorCode = mappedCode,
+            ErrorMessage = new List<string> { message }
         };
     }
 
     public async Task<AuthResult> RefreshAsync(CancellationToken cancellationToken = default)
     {
-        var client = _factory.CreateClient("GringottsBffClient");
+        var client = _factory.CreateClient("GringottsAuthClient");
         var resp = await client.PostAsync("/auth/refresh", null, cancellationToken).ConfigureAwait(false);
         if (resp.IsSuccessStatusCode)
         {
@@ -63,12 +74,23 @@ internal sealed class BffClient : IBffClient
             };
         }
 
-        var error = await resp.Content.ReadFromJsonAsync<BaseResponse>(_jsonOptions, cancellationToken).ConfigureAwait(false);
+        // Don't attempt to deserialize error body. Return mapped error code and raw message.
+        var raw = await resp.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+        var message = string.IsNullOrWhiteSpace(raw) ? resp.ReasonPhrase ?? resp.StatusCode.ToString() : raw;
+
+        var mappedCode = resp.StatusCode switch
+        {
+            System.Net.HttpStatusCode.BadRequest => ErrorCode.ValidationError,
+            System.Net.HttpStatusCode.NotFound => ErrorCode.EmployeeNotFound,
+            System.Net.HttpStatusCode.Unauthorized => ErrorCode.AuthenticationFailed,
+            _ => ErrorCode.InternalError
+        };
+
         return new AuthResult
         {
             Success = false,
-            ErrorCode = error?.ErrorCode ?? ErrorCode.InternalError,
-            ErrorMessage = error?.Errors ?? new List<string>()
+            ErrorCode = mappedCode,
+            ErrorMessage = new List<string> { message }
         };
     }
 

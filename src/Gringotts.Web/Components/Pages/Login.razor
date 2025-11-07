@@ -52,7 +52,7 @@
             if (result.Success)
             {
                 TokenStore.Set(result.AccessToken!);
-                NavigationManager.NavigateTo("/");
+                NavigationManager.NavigateTo("/", replace: true);
             }
             else
             {

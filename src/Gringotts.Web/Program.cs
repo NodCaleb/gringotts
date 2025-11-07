@@ -1,7 +1,6 @@
 using Gringotts.Contracts.Interfaces;
 using Gringotts.Web.Components;
 using Gringotts.Web.Internals;
-using Microsoft.AspNetCore.Authentication.Cookies;
 
 var builder = WebApplication.CreateBuilder(args);
 
