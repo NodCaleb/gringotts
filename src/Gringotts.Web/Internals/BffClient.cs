@@ -1,5 +1,4 @@
 using System.Text.Json;
-using System.Net.Http.Json;
 using Gringotts.Contracts.Interfaces;
 using Gringotts.Contracts.Requests;
 using Gringotts.Contracts.Responses;
@@ -7,9 +6,9 @@ using Gringotts.Contracts.Results;
 using Gringotts.Domain.Entities;
 using Gringotts.Shared.Enums;
 
-namespace Gringotts.Web;
+namespace Gringotts.Web.Internals;
 
-public sealed class BffClient : IBffClient
+internal sealed class BffClient : IBffClient
 {
     private readonly IHttpClientFactory _factory;
     private readonly JsonSerializerOptions _jsonOptions = new() { PropertyNameCaseInsensitive = true };

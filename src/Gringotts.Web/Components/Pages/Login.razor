@@ -4,8 +4,10 @@
 @using Gringotts.Contracts.Interfaces
 @using Gringotts.Contracts.Requests
 @using System.ComponentModel.DataAnnotations
+@using Gringotts.Web.Internals
 @inject NavigationManager NavigationManager
-@* @inject IBffClient BffClient *@
+@inject IBffClient BffClient
+@inject AccessTokenStore TokenStore
 
 <div class="login-page">
     <div class="login-container">
@@ -41,17 +43,26 @@
 
     private async Task HandleValidSubmit()
     {
-        // _error = null;
-        // var request = new AuthRequest(_model.UserName ?? string.Empty, _model.AccessCode);
-        // var result = await BffClient.LoginAsync(request);
-        // if (result.Success)
-        // {
-        //     NavigationManager.NavigateTo("/");
-        // }
-        // else
-        // {
-        //     _error = result.ErrorMessage?.FirstOrDefault() ?? "Login failed";
-        // }
+        _error = null;
+
+        try
+        {
+            var request = new AuthRequest(_model.UserName ?? string.Empty, _model.AccessCode);
+            var result = await BffClient.LoginAsync(request);
+            if (result.Success)
+            {
+                TokenStore.Set(result.AccessToken!);
+                NavigationManager.NavigateTo("/");
+            }
+            else
+            {
+                _error = result.ErrorMessage?.FirstOrDefault() ?? "Login failed";
+            }
+        }
+        catch (Exception)
+        {
+            _error = "Error during login";
+        }        
     }
 
     private class LoginModel
