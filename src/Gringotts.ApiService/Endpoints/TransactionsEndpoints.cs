@@ -2,6 +2,7 @@
 using Gringotts.Contracts.Responses;
 using Gringotts.Contracts.Requests;
 using Gringotts.Infrastructure.Interfaces;
+using Gringotts.Contracts.DTO;
 
 namespace Gringotts.ApiService.Endpoints;
 
@@ -19,11 +20,27 @@ public static class TransactionsEndpoints
 
             var result = await transactionsService.CreateTransactionAsync(request);
 
-            var errorResponse = new BaseResponse { ErrorCode = result.ErrorCode, Errors = result.ErrorMessage };
+            var errorResponse = new TransactionResponse { ErrorCode = result.ErrorCode, Errors = result.ErrorMessage };
 
             if (result.Success && result.Transaction != null)
             {
-                var response = new { ErrorCode = ErrorCode.None, Transaction = result.Transaction };
+                var tx = result.Transaction;
+
+                var txInfo = new TransactionInfo
+                {
+                    Id = tx.Id,
+                    RecipientId = tx.RecipientId,
+                    RecipientName = string.Empty,
+                    SenderId = tx.SenderId,
+                    SenderName = null,
+                    EmployeeId = tx.EmployeeId,
+                    EmployeeName = null,
+                    Amount = tx.Amount,
+                    Date = tx.Date,
+                    Description = tx.Description
+                };
+
+                var response = new TransactionResponse { ErrorCode = ErrorCode.None, Transaction = txInfo };
                 return Results.Created($"/transactions/{result.Transaction.Id}", response);
             }
 

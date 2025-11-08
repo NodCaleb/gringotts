@@ -42,7 +42,7 @@ internal class TransactionsService : ITransactionsService
             return new TransactionResult { Success = false, ErrorCode = ErrorCode.ValidationError, ErrorMessage = { "Either SenderId or EmployeeId must be provided." } };
         }
 
-        if (request.Amount <= 0)
+        if (!request.EmployeeId.HasValue && request.Amount <= 0) //Allow zero or negative amounts for employee transactions (e.g., adjustments)
         {
             return new TransactionResult { Success = false, ErrorCode = ErrorCode.ValidationError, ErrorMessage = { "Amount must be positive." } };
         }

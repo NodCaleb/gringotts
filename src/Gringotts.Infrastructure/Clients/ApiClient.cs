@@ -170,25 +170,38 @@ public class ApiClient : IApiClient
 
         if (resp.IsSuccessStatusCode)
         {
-            // API returns an object { ErrorCode = None, Transaction = { ... } }
             try
             {
-                using var stream = await resp.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
-                using var doc = await JsonDocument.ParseAsync(stream, cancellationToken: cancellationToken).ConfigureAwait(false);
-
-                var root = doc.RootElement;
-                var txElem = root.GetProperty("Transaction");
-                var tx = JsonSerializer.Deserialize<Transaction>(txElem.GetRawText(), _jsonOptions);
-
-                return new TransactionResult
+                var trResp = await resp.Content.ReadFromJsonAsync<TransactionResponse>(_jsonOptions, cancellationToken).ConfigureAwait(false);
+                if (trResp != null && trResp.Transaction != null)
                 {
-                    Success = true,
-                    ErrorCode = ErrorCode.None,
-                    Transaction = tx!
-                };
+                    var ti = trResp.Transaction;
+                    // Map TransactionInfo (DTO) to domain Transaction
+                    var tx = new Transaction
+                    {
+                        Id = ti.Id,
+                        Date = ti.Date,
+                        SenderId = ti.SenderId,
+                        RecipientId = ti.RecipientId,
+                        EmployeeId = ti.EmployeeId,
+                        Amount = ti.Amount,
+                        Description = ti.Description
+                    };
+
+                    return new TransactionResult
+                    {
+                        Success = true,
+                        ErrorCode = ErrorCode.None,
+                        Transaction = tx
+                    };
+                }
+
+                // If response succeeded but no transaction body, return success without transaction
+                return new TransactionResult { Success = true, ErrorCode = ErrorCode.None };
             }
             catch
             {
+                // If deserialization fails, treat it as success without transaction
                 return new TransactionResult { Success = true, ErrorCode = ErrorCode.None };
             }
         }
