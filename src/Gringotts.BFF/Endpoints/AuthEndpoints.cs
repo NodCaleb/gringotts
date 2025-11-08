@@ -1,8 +1,8 @@
-﻿using Gringotts.Contracts.Requests;
+﻿using Gringotts.BFF.Internals;
 using Gringotts.Contracts.Interfaces;
-using Gringotts.Shared.Enums;
-using Gringotts.BFF.Internals;
+using Gringotts.Contracts.Requests;
 using Gringotts.Contracts.Responses;
+using Gringotts.Shared.Enums;
 
 namespace Gringotts.BFF.Endpoints;
 
@@ -54,7 +54,7 @@ public static class AuthEndpoints
                 _ => Results.Problem(detail: result.ErrorMessage.FirstOrDefault() ?? "An error occurred.")
             };
 
-        }).WithName("BffLogin");
+        }).WithName("AuthLogin");
 
         app.MapPost("/auth/refresh", async (HttpContext http, TokensService tokensService, ICache cache) =>
         {
@@ -88,7 +88,7 @@ public static class AuthEndpoints
 
             return Results.Ok(authResp);
 
-        }).WithName("BffRefresh");
+        }).WithName("AuthRefresh");
 
         app.MapPost("/auth/logout", async (HttpContext http, ICache cache) =>
         {
@@ -99,6 +99,18 @@ public static class AuthEndpoints
             }
             return Results.Ok();
 
-        }).WithName("BffLogout");
+        }).WithName("AuthLogout");
+
+        app.MapGet("/auth/debug", (HttpContext http, HttpRequest req) =>
+        {
+            var auth = req.Headers.Authorization.ToString();
+            var u = http.User;
+            return Results.Ok(new
+            {
+                authenticated = u.Identity?.IsAuthenticated ?? false,
+                name = u.Identity?.Name,
+                claims = u.Claims.Select(c => new { c.Type, c.Value })
+            });
+        }).WithName("AuthDebug");
     }
 }

@@ -18,7 +18,12 @@ builder.AddRedisDistributedCache(connectionName: "cache");
 var jwtOptions = builder.Configuration.GetSection("Jwt").Get<JwtOptions>()!;
 builder.Services.AddSingleton(jwtOptions);
 
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+builder.Services.AddAuthentication(options =>
+    {
+        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+    })
     .AddJwtBearer(options =>
     {
         options.TokenValidationParameters = new TokenValidationParameters
@@ -31,6 +36,32 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateIssuer = true,
             ValidateAudience = true,
             ValidateLifetime = true
+        };
+
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = ctx =>
+            {
+                // Logs the raw Authorization header when present
+                if (!string.IsNullOrEmpty(ctx.Token))
+                    ctx.HttpContext.RequestServices.GetRequiredService<ILoggerFactory>()
+                       .CreateLogger("JWT").LogDebug("Token received ({Length} chars)", ctx.Token.Length);
+                return Task.CompletedTask;
+            },
+            OnAuthenticationFailed = ctx =>
+            {
+                ctx.HttpContext.RequestServices.GetRequiredService<ILoggerFactory>()
+                   .CreateLogger("JWT").LogError(ctx.Exception, "JWT auth failed");
+                return Task.CompletedTask;
+            },
+            OnTokenValidated = ctx =>
+            {
+                var logger = ctx.HttpContext.RequestServices.GetRequiredService<ILoggerFactory>()
+                   .CreateLogger("JWT");
+                var name = ctx.Principal?.Identity?.Name ?? "(no name)";
+                logger.LogInformation("JWT validated for {Name}", name);
+                return Task.CompletedTask;
+            }
         };
     });
 
@@ -117,5 +148,9 @@ app.MapDefaultEndpoints();
 app.UseHttpsRedirection();
 
 app.UseCors("ui");
+
+app.UseAuthentication();
+
+app.UseAuthorization();
 
 app.Run();

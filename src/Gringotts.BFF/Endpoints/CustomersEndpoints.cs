@@ -24,7 +24,7 @@ public static class CustomersEndpoints
                 ErrorCode.ValidationError => Results.BadRequest(err),
                 _ => Results.Problem(detail: result.ErrorMessage.FirstOrDefault() ?? "An error occurred.")
             };
-        }).WithName("BffGetCustomers");
+        }).RequireAuthorization().WithName("BffGetCustomers");
 
         // GET /bff/customers/{id}
         app.MapGet("/bff/customers/{id:long}", async (IApiClient apiClient, long id) =>
@@ -43,6 +43,6 @@ public static class CustomersEndpoints
                 ErrorCode.ValidationError => Results.BadRequest(err),
                 _ => Results.Problem(detail: result.ErrorMessage.FirstOrDefault() ?? "An error occurred.")
             };
-        }).WithName("BffGetCustomerById");
+        }).RequireAuthorization().WithName("BffGetCustomerById");
     }
 }
