@@ -38,7 +38,36 @@ else
                     </dl>
                 </div>
                 <div class="col-md-8">
-                    <!-- Additional customer fields can go here -->
+                    <!-- Create transaction form -->
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Create transaction</h5>
+
+                            @if (!string.IsNullOrEmpty(createError))
+                            {
+                                <div class="alert alert-danger">@createError</div>
+                            }
+
+                            <div class="mb-3">
+                                <label class="form-label">Recipient</label>
+                                <input class="form-control" value="@customer.ToString()" disabled />
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Amount</label>
+                                <input type="number" step="0.01" class="form-control" @bind="newAmount" />
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Description</label>
+                                <input class="form-control" @bind="newDescription" />
+                            </div>
+
+                            <button class="btn btn-primary" @onclick="OnCreateTransaction" disabled="@(isCreating)">
+                                @(isCreating ? "Creating..." : "Create")
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
             <button class="btn btn-secondary mt-2" @onclick="GoBack">Back to list</button>
@@ -89,6 +118,12 @@ else
     private List<TransactionInfo>? transactions;
     private bool isLoading = false;
     private string? error;
+
+    // New transaction UI state
+    private decimal newAmount = 0m;
+    private string? newDescription;
+    private bool isCreating = false;
+    private string? createError;
 
     protected override async Task OnParametersSetAsync()
     {
@@ -141,5 +176,48 @@ else
     private void GoBack()
     {
         Navigation.NavigateTo("/customers");
+    }
+
+    private async Task OnCreateTransaction()
+    {
+        createError = null;
+
+        if (string.IsNullOrWhiteSpace(newDescription))
+        {
+            createError = "Description is required.";
+            return;
+        }
+
+        isCreating = true;
+        try
+        {
+            var result = await BffClient.CreateTransactionAsync(id, newAmount, newDescription!);
+            if (result.Success)
+            {
+                // Clear inputs
+                newAmount = 0m;
+                newDescription = null;
+
+                // Reload transactions only
+                var txResult = await BffClient.GetTransactionsByCustomerAsync(id, pageNumber: null, pageSize: null);
+                if (txResult.Success)
+                {
+                    transactions = txResult.Transactions?.OrderByDescending(t => t.Date).ToList() ?? new List<TransactionInfo>();
+                }
+            }
+            else
+            {
+                createError = result.ErrorMessage?.FirstOrDefault() ?? "Unable to create transaction.";
+            }
+        }
+        catch (Exception ex)
+        {
+            createError = ex.Message;
+        }
+        finally
+        {
+            isCreating = false;
+            StateHasChanged();
+        }
     }
 }

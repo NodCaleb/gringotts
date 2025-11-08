@@ -22,7 +22,7 @@ public class TransactionInfo
         var isSender = SenderId.HasValue && customerId == SenderId.Value;
 
         // Arrow: incoming -> left, outgoing -> right, otherwise neutral
-        var arrow = isRecipient ? "⬅️" : isSender ? "➡️" : "↔️";
+        var arrow = (isRecipient && Amount > 0) ? "⬅️" : "➡️";
 
         // Counterpart name: if customer is recipient, counterpart is sender (or employee); otherwise counterpart is recipient
         string counterpart = isRecipient
@@ -30,7 +30,7 @@ public class TransactionInfo
             : (RecipientName ?? "Unknown");
 
         // Amount sign: plus for incoming, minus for outgoing, blank otherwise
-        var sign = isRecipient ? "+" : isSender ? "-" : string.Empty;
+        var sign = (Amount < 0) ? string.Empty : isRecipient ? "+" : "-";
         var amountText = sign + Amount.ToString("N2");
 
         return $"{Date} {arrow} {counterpart}{Environment.NewLine}{amountText}{Environment.NewLine}{Description}{Environment.NewLine}";

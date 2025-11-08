@@ -155,6 +155,55 @@ internal sealed class BffClient : IBffClient
         };
     }
 
+    public async Task<TransactionResult> CreateTransactionAsync(long recipientId, decimal amount, string description, CancellationToken cancellationToken = default)
+    {
+        var client = _factory.CreateClient("GringottsBffClient");
+        var payload = new { RecipientId = recipientId, Amount = amount, Description = description };
+        var resp = await client.PostAsJsonAsync("/bff/transactions", payload, cancellationToken).ConfigureAwait(false);
+        if (resp.IsSuccessStatusCode)
+        {
+            try
+            {
+                var trResp = await resp.Content.ReadFromJsonAsync<TransactionResponse>(_jsonOptions, cancellationToken).ConfigureAwait(false);
+                if (trResp != null && trResp.Transaction != null)
+                {
+                    var ti = trResp.Transaction;
+                    var tx = new Transaction
+                    {
+                        Id = ti.Id,
+                        Date = ti.Date,
+                        SenderId = ti.SenderId,
+                        RecipientId = ti.RecipientId,
+                        EmployeeId = ti.EmployeeId,
+                        Amount = ti.Amount,
+                        Description = ti.Description
+                    };
+
+                    return new TransactionResult
+                    {
+                        Success = true,
+                        ErrorCode = ErrorCode.None,
+                        Transaction = tx
+                    };
+                }
+
+                return new TransactionResult { Success = true, ErrorCode = ErrorCode.None };
+            }
+            catch
+            {
+                return new TransactionResult { Success = true, ErrorCode = ErrorCode.None };
+            }
+        }
+
+        var error = await resp.Content.ReadFromJsonAsync<BaseResponse>(_jsonOptions, cancellationToken).ConfigureAwait(false);
+        return new TransactionResult
+        {
+            Success = false,
+            ErrorCode = error?.ErrorCode ?? ErrorCode.InternalError,
+            ErrorMessage = error?.Errors ?? new List<string>()
+        };
+    }
+
     public async Task<CustomersListResult> SearchCustomersAsync(string? search, int? pageNumber = null, int? pageSize = null, CancellationToken cancellationToken = default)
     {
         var client = _factory.CreateClient("GringottsBffClient");

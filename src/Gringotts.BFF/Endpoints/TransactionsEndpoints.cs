@@ -3,6 +3,7 @@ using Gringotts.Contracts.Responses;
 using Gringotts.Shared.Enums;
 using System.Security.Claims;
 using Gringotts.Contracts.Requests;
+using Gringotts.Contracts.DTO;
 
 namespace Gringotts.BFF.Endpoints;
 
@@ -94,7 +95,5 @@ public static class TransactionsEndpoints
 
         }).RequireAuthorization().WithName("BffCreateTransaction");
     }
-
-    // Minimal DTO for creating transaction from BFF client
-    public sealed record CreateTransactionDto(long RecipientId, decimal Amount, string Description);
+    
 }
