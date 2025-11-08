@@ -1,5 +1,6 @@
 ﻿using Gringotts.BFF.Configuration;
 using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
@@ -24,19 +25,19 @@ internal class TokensService
         };
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_opt.SigningKey));
-        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-        var jwt = new System.IdentityModel.Tokens.Jwt.JwtSecurityToken(
-            issuer: _opt.Issuer,
-            audience: _opt.Audience,
-            claims: claims,
-            notBefore: now.UtcDateTime,
-            expires: now.AddMinutes(_opt.AccessMinutes).UtcDateTime,
-            signingCredentials: creds);
+        var tokenDescriptor = new SecurityTokenDescriptor
+        {
+            Issuer = _opt.Issuer,
+            Audience = _opt.Audience,
+            Expires = DateTime.UtcNow.AddMinutes(_opt.AccessMinutes),
+            SigningCredentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256),
+            Subject = new ClaimsIdentity(claims)
+        };
 
-        var access = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler().WriteToken(jwt);
+        var tokenHandler = new JwtSecurityTokenHandler();
+        var token = tokenHandler.CreateToken(tokenDescriptor);
 
-        // Refresh token (opaque random)
         var refreshToken = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
         var refresh = new RefreshSession
         {
@@ -48,6 +49,6 @@ internal class TokensService
             ExpiresUtc = now.AddDays(_opt.RefreshDays)
         };
 
-        return (access, refresh);
+        return (tokenHandler.WriteToken(token), refresh);
     }
 }

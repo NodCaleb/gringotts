@@ -101,6 +101,7 @@ public static class AuthEndpoints
 
         }).WithName("AuthLogout");
 
+#if DEBUG
         app.MapGet("/auth/debug", (HttpContext http, HttpRequest req) =>
         {
             var auth = req.Headers.Authorization.ToString();
@@ -111,6 +112,8 @@ public static class AuthEndpoints
                 name = u.Identity?.Name,
                 claims = u.Claims.Select(c => new { c.Type, c.Value })
             });
-        }).WithName("AuthDebug");
+        }).WithName("AuthDebug"); 
+#endif
+
     }
 }
