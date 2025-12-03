@@ -1,5 +1,14 @@
 var builder = DistributedApplication.CreateBuilder(args);
 
+var storage = builder.AddAzureStorage("storage");
+
+if (!builder.ExecutionContext.IsPublishMode)
+{
+    storage.RunAsEmulator();
+}
+
+var telegramQueue = storage.AddQueue("telegram-outbox");
+
 var postgres = builder
     .AddPostgres("postgres")
     .WithLifetime(ContainerLifetime.Persistent)
@@ -17,12 +26,16 @@ var apiService = builder.AddProject<Projects.Gringotts_ApiService>("gringotts-ap
  .WithHttpHealthCheck("/health")
  .WaitFor(gringottsDb)
  .WithReference(gringottsDb)
+ .WaitFor(telegramQueue)
+ .WithReference(telegramQueue)
  .WaitForCompletion(seeder);
 
 builder.AddProject<Projects.Gringotts_Bot>("gringotts-bot")
  .WithExternalHttpEndpoints()
  .WithReference(apiService)
  .WaitFor(apiService)
+ .WithReference(telegramQueue)
+ .WaitFor(telegramQueue)
  .WithReference(cache);
 
 var bff = builder.AddProject<Projects.Gringotts_BFF>("gringotts-bff")
