@@ -14,4 +14,8 @@
 		<ProjectReference Include="..\Gringotts.ServiceDefaults\Gringotts.ServiceDefaults.csproj" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <PackageReference Include="Aspire.Azure.Storage.Queues" Version="13.0.2" />
+	</ItemGroup>
+
 </Project>

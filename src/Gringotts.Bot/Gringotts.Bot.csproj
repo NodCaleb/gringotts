@@ -9,6 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Aspire.Azure.Storage.Queues" Version="13.0.2" />
     <PackageReference Include="Aspire.StackExchange.Redis.DistributedCaching" Version="9.5.2" />
     <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="9.0.10" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.10" />
@@ -28,5 +29,9 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
+
+	<ItemGroup>
+		<InternalsVisibleTo Include="Gringotts.Infrastructure.UnitTests" />
+	</ItemGroup>
 
 </Project>

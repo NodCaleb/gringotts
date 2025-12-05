@@ -17,6 +17,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Gringotts.AppHost\Gringotts.AppHost.csproj" />
+    <ProjectReference Include="..\..\src\Gringotts.Bot\Gringotts.Bot.csproj" />
     <ProjectReference Include="..\..\src\Gringotts.Domain\Gringotts.Domain.csproj" />
     <ProjectReference Include="..\..\src\Gringotts.Infrastructure\Gringotts.Infrastructure.csproj" />
   </ItemGroup>
