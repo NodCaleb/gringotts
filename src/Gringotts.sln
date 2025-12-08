@@ -18,8 +18,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gringotts.Infrastructure", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gringotts.Contracts", "Gringotts.Contracts\Gringotts.Contracts.csproj", "{87AF7E91-59BF-4AC8-BB52-76C344A26877}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gringotts.Shared", "Gringotts.Shared\Gringotts.Shared.csproj", "{05ABD473-9AD4-47C4-A6A8-3CD4B95BFB6E}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gringotts.Bot", "Gringotts.Bot\Gringotts.Bot.csproj", "{E00F0BEB-31E1-4F81-935A-24F4C30B7ABB}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gringotts.Seeder", "Gringotts.Seeder\Gringotts.Seeder.csproj", "{5A50B28D-05ED-4813-B143-420415ACF059}"
@@ -74,10 +72,6 @@ Global
 		{87AF7E91-59BF-4AC8-BB52-76C344A26877}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{87AF7E91-59BF-4AC8-BB52-76C344A26877}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{87AF7E91-59BF-4AC8-BB52-76C344A26877}.Release|Any CPU.Build.0 = Release|Any CPU
-		{05ABD473-9AD4-47C4-A6A8-3CD4B95BFB6E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{05ABD473-9AD4-47C4-A6A8-3CD4B95BFB6E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{05ABD473-9AD4-47C4-A6A8-3CD4B95BFB6E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{05ABD473-9AD4-47C4-A6A8-3CD4B95BFB6E}.Release|Any CPU.Build.0 = Release|Any CPU
 		{E00F0BEB-31E1-4F81-935A-24F4C30B7ABB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{E00F0BEB-31E1-4F81-935A-24F4C30B7ABB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E00F0BEB-31E1-4F81-935A-24F4C30B7ABB}.Release|Any CPU.ActiveCfg = Release|Any CPU

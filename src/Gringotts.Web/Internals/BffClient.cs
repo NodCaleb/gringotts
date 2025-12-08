@@ -1,10 +1,10 @@
 using System.Text.Json;
+using Gringotts.Contracts.Enums;
 using Gringotts.Contracts.Interfaces;
 using Gringotts.Contracts.Requests;
 using Gringotts.Contracts.Responses;
 using Gringotts.Contracts.Results;
 using Gringotts.Domain.Entities;
-using Gringotts.Shared.Enums;
 
 namespace Gringotts.Web.Internals;
 

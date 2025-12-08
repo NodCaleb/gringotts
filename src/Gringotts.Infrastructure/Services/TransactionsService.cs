@@ -1,10 +1,10 @@
 ﻿using System.Linq;
 using Gringotts.Infrastructure.Interfaces;
 using Gringotts.Domain.Entities;
-using Gringotts.Shared.Enums;
 using Gringotts.Contracts.Requests;
 using Gringotts.Contracts.Results;
 using Gringotts.Contracts.DTO;
+using Gringotts.Contracts.Enums;
 
 namespace Gringotts.Infrastructure.Services;
 

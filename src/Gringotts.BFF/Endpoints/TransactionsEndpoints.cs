@@ -1,9 +1,9 @@
 ﻿using Gringotts.Contracts.Interfaces;
 using Gringotts.Contracts.Responses;
-using Gringotts.Shared.Enums;
 using System.Security.Claims;
 using Gringotts.Contracts.Requests;
 using Gringotts.Contracts.DTO;
+using Gringotts.Contracts.Enums;
 
 namespace Gringotts.BFF.Endpoints;
 

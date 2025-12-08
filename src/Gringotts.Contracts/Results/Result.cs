@@ -1,4 +1,4 @@
-﻿using Gringotts.Shared.Enums;
+﻿using Gringotts.Contracts.Enums;
 
 namespace Gringotts.Contracts.Results;
 

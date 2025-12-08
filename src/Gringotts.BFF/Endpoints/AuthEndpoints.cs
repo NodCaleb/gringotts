@@ -1,8 +1,8 @@
 ﻿using Gringotts.BFF.Internals;
+using Gringotts.Contracts.Enums;
 using Gringotts.Contracts.Interfaces;
 using Gringotts.Contracts.Requests;
 using Gringotts.Contracts.Responses;
-using Gringotts.Shared.Enums;
 
 namespace Gringotts.BFF.Endpoints;
 

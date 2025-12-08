@@ -1,6 +1,6 @@
-﻿using Gringotts.Contracts.Interfaces;
+﻿using Gringotts.Contracts.Enums;
+using Gringotts.Contracts.Interfaces;
 using Gringotts.Contracts.Responses;
-using Gringotts.Shared.Enums;
 
 namespace Gringotts.BFF.Endpoints;
 

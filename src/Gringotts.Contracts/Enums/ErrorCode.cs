@@ -1,4 +1,4 @@
-﻿namespace Gringotts.Shared.Enums;
+﻿namespace Gringotts.Contracts.Enums;
 
 public enum ErrorCode
 {

@@ -1,7 +1,7 @@
 ﻿using Gringotts.Infrastructure.Interfaces;
-using Gringotts.Shared.Enums;
 using Gringotts.Contracts.Responses;
 using Gringotts.Contracts.Requests;
+using Gringotts.Contracts.Enums;
 
 namespace Gringotts.ApiService.Endpoints;
 

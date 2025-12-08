@@ -1,5 +1,3 @@
-using Gringotts.Shared.Enums;
-
 namespace Gringotts.Contracts.Responses;
 
 // Response for authentication check which includes EmployeeId when available

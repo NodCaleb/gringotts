@@ -1,5 +1,5 @@
+using Gringotts.Contracts.Enums;
 using Gringotts.Domain.Entities;
-using Gringotts.Shared.Enums;
 
 namespace Gringotts.Contracts.Responses;
 
